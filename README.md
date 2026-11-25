@@ -17,10 +17,11 @@ En Windows, activá el entorno con `.venv\Scripts\activate` en CMD. El programa 
 
 ## Cómo jugar
 
+- En el menú, elegí un macaquito y una dificultad. Cada nivel muestra su mejor puntaje guardado.
 - Encendé la linterna del celular y mostrá el foco a la webcam. Cuando aparezca el macaquito a la izquierda, presioná Espacio.
 - Subí la linterna para ascender y bajala para descender. La posición horizontal del macaquito es fija.
 - Si se pierde el foco, el juego se pausa. Volvé a mostrar la linterna para seguir.
-- Tras una victoria o un choque, mostrá la linterna y presioná Espacio para volver a jugar. Cerrá con la X.
+- Tras una victoria o un choque, mostrá la linterna y presioná Espacio para volver a jugar. Esc vuelve al menú y la X cierra el juego.
 
 Usá un entorno con luz tenue y un fondo sin ventanas, lámparas ni reflejos dentro del cuadro. Empezá a unos 60 cm de la webcam y probá el recorrido vertical en la pantalla inicial. Si el foco llena una parte grande de la imagen, alejá el teléfono. Si tu cámara no detecta el foco, revisá el permiso y ajustá los umbrales en `ajustes.py`.
 
@@ -30,6 +31,8 @@ Usá un entorno con luz tenue y un fondo sin ventanas, lámparas ni reflejos den
 | --- | --- |
 | `main.py` | Pantallas, bucle, vuelo, choques y puntaje. Incluye la clase `Obstaculo`. |
 | `vision.py` | Abre la webcam, espeja el cuadro y devuelve el centro normalizado del foco como `(x, y)` o `None`. |
+| `menu.py` | Selección de personaje, dificultad y vista de récords. |
+| `puntajes.py` | Lectura y escritura de los récords locales. |
 | `ajustes.py` | Colores, dimensiones, velocidades, dificultad y umbrales de detección. |
 
 Los WAV de `sonidos/` se sintetizaron para el proyecto a partir de ondas senoidales. Las figuras del juego se dibujan con Pygame y el póster se dibujó con Pillow. Los recursos visuales y sonoros son originales del proyecto.
