@@ -1,1 +1,50 @@
-# 2ndo-PARCIAL-PROGRAMACION-MARIA-PIA-CEA-282539
+# Macaquito · Vuelo nocturno
+
+Guiá a un macaquito con la linterna del celular. Cruzá 12 desfiladeros sin chocar. A medida que sumás puntos, las paredes avanzan más rápido y los próximos huecos se achican.
+
+## Instalación
+
+Desde esta carpeta, con Python 3.10, 3.11 o 3.12:
+
+```sh
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install -r requirements.txt
+python main.py
+```
+
+En Windows, activá el entorno con `.venv\Scripts\activate` en CMD. El programa usa Pygame, OpenCV y NumPy. Si macOS pide acceso a la cámara, concedéselo a la app desde la que ejecutás Python.
+
+## Cómo jugar
+
+- Encendé la linterna del celular y mostrá el foco a la webcam. Cuando aparezca el macaquito a la izquierda, presioná Espacio.
+- Subí la linterna para ascender y bajala para descender. La posición horizontal del macaquito es fija.
+- Si se pierde el foco, el juego se pausa. Volvé a mostrar la linterna para seguir.
+- Tras una victoria o un choque, mostrá la linterna y presioná Espacio para volver a jugar. Cerrá con la X.
+
+Usá un entorno con luz tenue y un fondo sin ventanas, lámparas ni reflejos dentro del cuadro. Empezá a unos 60 cm de la webcam y probá el recorrido vertical en la pantalla inicial. Si el foco llena una parte grande de la imagen, alejá el teléfono. Si tu cámara no detecta el foco, revisá el permiso y ajustá los umbrales en `ajustes.py`.
+
+## Archivos
+
+| Archivo | Contenido |
+| --- | --- |
+| `main.py` | Pantallas, bucle, vuelo, choques y puntaje. Incluye la clase `Obstaculo`. |
+| `vision.py` | Abre la webcam, espeja el cuadro y devuelve el centro normalizado del foco como `(x, y)` o `None`. |
+| `ajustes.py` | Colores, dimensiones, velocidades, dificultad y umbrales de detección. |
+
+Los WAV de `sonidos/` se sintetizaron para el proyecto a partir de ondas senoidales. Las figuras del juego se dibujan con Pygame y el póster se dibujó con Pillow. Los recursos visuales y sonoros son originales del proyecto.
+
+## Uso de IA
+
+Se usó OpenAI Codex para interpretar la consigna, implementar y verificar el código, sintetizar sonidos y preparar el README, el informe y el póster.
+
+Prompts relevantes:
+
+- «necesito hacer este parcial» (con la consigna en PDF adjunta).
+- «yo quiero hacer algo asi, pero mas dificil. quiero hacer un flappy bird. con la linterna del celu se ,maneja el macaquito y va volando pasando obstaculos. se entiende ?»
+
+OpenAI Codex. (2026). *Prompts utilizados para desarrollar Macaquito y sus materiales de entrega* [Generación de código y texto]. Recuperado de https://openai.com/codex/
+
+## Repositorio
+
+Enlace de GitHub pendiente de agregar cuando se publique el repositorio local.
