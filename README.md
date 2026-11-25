@@ -1,6 +1,6 @@
 # Macaquito · Vuelo nocturno
 
-Guiá a tu piloto con la linterna del celular. Cruzá 12 desfiladeros sin chocar con las paredes ni con los murciélagos. A medida que sumás puntos, las paredes avanzan más rápido y los próximos huecos se achican.
+Guiá a tu piloto con la linterna del celular. Cruzá 12 desfiladeros en Fácil, 15 en Normal, 20 en Difícil o 25 en Extremo. En Survival, sumá todos los puntos que puedas hasta chocar con una pared o un murciélago. A medida que sumás puntos, las paredes avanzan más rápido y los próximos huecos se achican.
 
 ## Instalación
 
@@ -17,11 +17,12 @@ En Windows, activá el entorno con `.venv\Scripts\activate` en CMD. El programa 
 
 ## Cómo jugar
 
-- En el menú, elegí un mono, un zorro, un conejo, un panda o una rana y seleccioná la dificultad. Cada nivel muestra su mejor puntaje guardado.
-- Encendé la linterna del celular y mostrá el foco a la webcam. Cuando aparezca el macaquito a la izquierda, presioná Espacio.
+- En el menú, elegí un mono, un zorro, un conejo, un panda o una rana y seleccioná la dificultad. Cada modo muestra su mejor puntaje guardado. Podés usar el mouse o las flechas (arriba/abajo para cambiar de fila, izquierda/derecha para cambiar la opción).
+- Encendé la linterna del celular y mostrá el foco a la webcam. Cuando aparezca el macaquito a la izquierda, presioná Enter o Espacio.
 - Subí la linterna para ascender y bajala para descender. La posición horizontal del piloto es fija. Los murciélagos suben y bajan entre las paredes y aparecen más seguido en las dificultades altas.
+- Agarrá las frutas rojas para activar cinco segundos de turbo. Durante ese tiempo volás más rápido y cada desfiladero cruzado vale dos puntos. La barra inferior muestra cuánto turbo queda. Otra fruta recarga la barra.
 - Si se pierde el foco, el juego se pausa. Volvé a mostrar la linterna para seguir.
-- Tras una victoria o un choque, mostrá la linterna y presioná Espacio para volver a jugar. Esc vuelve al menú y la X cierra el juego.
+- Tras una victoria o un choque, elegí Volver a jugar o Volver al menú principal con el mouse. También podés pulsar Enter, Espacio o R para repetir la ronda si la linterna está visible, y Esc o M para volver al menú. La X cierra el juego.
 
 Usá un entorno con luz tenue y un fondo sin ventanas, lámparas ni reflejos dentro del cuadro. Empezá a unos 60 cm de la webcam y probá el recorrido vertical en la pantalla inicial. Si el foco llena una parte grande de la imagen, alejá el teléfono. Si tu cámara no detecta el foco, revisá el permiso y ajustá los umbrales en `ajustes.py`.
 

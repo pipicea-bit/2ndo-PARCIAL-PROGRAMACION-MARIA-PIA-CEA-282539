@@ -22,8 +22,8 @@ class Menu:
             for x, nombre in zip((126, 278, 430, 582, 734), ANIMALES)
         }
         self.niveles = {
-            nivel: pygame.Rect(x - 89, 296, 178, 94)
-            for x, nivel in zip((142, 334, 526, 718), a.DIFICULTADES)
+            nivel: pygame.Rect(x - 76, 296, 152, 94)
+            for x, nivel in zip((108, 269, 430, 591, 752), a.DIFICULTADES)
         }
         self.boton = pygame.Rect(310, 430, 240, 44)
         self.personaje = "Mono"

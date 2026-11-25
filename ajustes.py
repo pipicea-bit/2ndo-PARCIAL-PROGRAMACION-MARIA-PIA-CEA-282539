@@ -21,9 +21,10 @@ DIFICULTADES = {
     "Fácil": (150, 7, 250, 200, 4),
     "Normal": (195, 13, 210, 148, 6),
     "Difícil": (235, 15, 178, 125, 6),
+    "Extremo": (250, 12, 155, 112, 5),
     "Survival": (190, 10, 210, 140, 5),
 }
-METAS = {"Fácil": 8, "Normal": 12, "Difícil": 18, "Survival": None}
+METAS = {"Fácil": 12, "Normal": 15, "Difícil": 20, "Extremo": 25, "Survival": None}
 VELOCIDAD_MAXIMA_SURVIVAL = 410
 COLOR_MURCIELAGO = (191, 144, 230)
 OJOS_MURCIELAGO = (255, 219, 133)
@@ -31,8 +32,8 @@ RADIO_MURCIELAGO = 15
 DISTANCIA_MURCIELAGO = 190
 AMPLITUD_MURCIELAGO = 45
 FRECUENCIA_MURCIELAGO = 2.8
-PRIMER_MURCIELAGO = {"Fácil": 4, "Normal": 2, "Difícil": 1, "Survival": 2}
-INTERVALO_MURCIELAGO = {"Fácil": 4, "Normal": 3, "Difícil": 2, "Survival": 2}
+PRIMER_MURCIELAGO = {"Fácil": 4, "Normal": 2, "Difícil": 1, "Extremo": 1, "Survival": 2}
+INTERVALO_MURCIELAGO = {"Fácil": 4, "Normal": 3, "Difícil": 2, "Extremo": 2, "Survival": 2}
 COLOR_FRUTA = (255, 120, 106)
 COLOR_HOJA = (162, 235, 123)
 RADIO_FRUTA = 13
