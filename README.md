@@ -41,12 +41,8 @@ Los WAV de `sonidos/` se sintetizaron para el proyecto a partir de ondas senoida
 
 ## Uso de IA
 
-Se usó OpenAI Codex para interpretar la consigna, implementar y verificar el código, sintetizar sonidos y preparar el README, el informe y el póster.
+Se usó OpenAI Codex para interpretar, implementar y verificar el código, sintetizar sonidos y preparar el README
 
-Prompts relevantes:
-
-- «necesito hacer este parcial» (con la consigna en PDF adjunta).
-- «yo quiero hacer algo asi, pero mas dificil. quiero hacer un flappy bird. con la linterna del celu se ,maneja el macaquito y va volando pasando obstaculos. se entiende ?»
 
 OpenAI Codex. (2026). *Prompts utilizados para desarrollar Macaquito y sus materiales de entrega* [Generación de código y texto]. Recuperado de https://openai.com/codex/
 
