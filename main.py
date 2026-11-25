@@ -10,7 +10,7 @@ import ajustes as a
 from animales import dibujar_macaquito
 from menu import Menu, dibujar_tarjeta, escribir
 from puntajes import cargar, guardar
-from vision import abrir_camara, detectar
+from vision import LectorLinterna, abrir_camara
 
 
 class Obstaculo:
@@ -122,13 +122,42 @@ def cargar_sonidos():
     )
 
 
+def dibujar_calibracion(pantalla, titulo, normal, estado, boton, error):
+    """Guía la toma de luz ambiente, la detección y el inicio del vuelo."""
+    escribir(pantalla, titulo, "Prepará tu linterna", 128, a.BOLSO)
+    if estado == "ambiente":
+        escribir(pantalla, normal, "1. Apagá la linterna y dejá la cámara apuntando al lugar de juego.", 226)
+        etiqueta = "Registrar luz ambiente"
+    elif estado == "buscar":
+        escribir(pantalla, normal, "2. Encendé tu linterna y mostrala a la cámara.", 226)
+        escribir(pantalla, normal, "Mantenela quieta un momento frente a la webcam.", 263)
+        escribir(pantalla, normal, "Buscando la linterna…", 345, a.BOLSO)
+        etiqueta = None
+    else:
+        escribir(pantalla, normal, "Linterna detectada correctamente", 226, a.COLOR_HOJA)
+        escribir(pantalla, normal, "Mové el celular hacia arriba y abajo para controlar a tu animal.", 263)
+        etiqueta = "Empezar a volar"
+
+    if etiqueta is not None:
+        dibujar_tarjeta(pantalla, boton, True)
+        escribir(pantalla, normal, etiqueta, boton.centery)
+    if error:
+        escribir(pantalla, normal, "No se pudo leer la cámara. Revisá los permisos y volvé a intentar.", 415, a.BOLSO)
+    escribir(pantalla, normal, "Enter o clic para confirmar · Esc para volver", 481)
+
+
 def jugar(pantalla, reloj, cap, sonido_paso, sonido_fin):
     """Ejecuta la partida y permite reiniciar desde la pantalla final."""
     titulo = pygame.font.Font(None, 78)
     normal = pygame.font.Font(None, 29)
+    chico = pygame.font.Font(None, 23)
     estrellas = [(randint(0, a.ANCHO), randint(a.HUD, a.ALTO)) for _ in range(85)]
     estado = "menu"
     menu = Menu()
+    lector = LectorLinterna(cap)
+    pantallas_calibracion = ("ambiente", "buscar", "listo")
+    confirmar = pygame.Rect(285, 321, 290, 48)
+    error_camara = False
     records = cargar()
     guardado = True
     repetir = pygame.Rect(164, 294, 250, 52)
@@ -150,6 +179,8 @@ def jugar(pantalla, reloj, cap, sonido_paso, sonido_fin):
                         empezar = True
                     else:
                         menu.tecla(evento.key)
+                elif estado in ("ambiente", "listo"):
+                    empezar = evento.key in (pygame.K_SPACE, pygame.K_RETURN) or empezar
                 elif estado in ("victoria", "derrota"):
                     if evento.key in (pygame.K_SPACE, pygame.K_RETURN, pygame.K_r):
                         empezar = True
@@ -159,6 +190,8 @@ def jugar(pantalla, reloj, cap, sonido_paso, sonido_fin):
             if evento.type == pygame.MOUSEBUTTONDOWN and evento.button == 1:
                 if estado == "menu":
                     empezar = menu.pulsar(evento.pos) or empezar
+                elif estado in ("ambiente", "listo"):
+                    empezar = confirmar.collidepoint(evento.pos) or empezar
                 elif estado in ("victoria", "derrota"):
                     if repetir.collidepoint(evento.pos):
                         empezar = True
@@ -166,8 +199,21 @@ def jugar(pantalla, reloj, cap, sonido_paso, sonido_fin):
                         estado = "menu"
                         empezar = False
 
-        posicion = detectar(cap)
-        if empezar and posicion is not None:
+        posicion = None
+        if estado in ("buscar", "listo", "jugando"):
+            posicion = lector.detectar()
+        if empezar and estado in ("menu", "victoria", "derrota"):
+            estado = "ambiente"
+            error_camara = False
+        elif empezar and estado == "ambiente":
+            error_camara = not lector.registrar_ambiente()
+            if not error_camara:
+                estado = "buscar"
+        elif estado in ("buscar", "listo") and not lector.confirmar(posicion):
+            estado = "buscar"
+        elif estado == "buscar":
+            estado = "listo"
+        elif empezar and estado == "listo":
             puntos = 0
             cruces = 0
             restante_turbo = 0.0
@@ -180,6 +226,7 @@ def jugar(pantalla, reloj, cap, sonido_paso, sonido_fin):
 
         # Al perder el foco se congela el vuelo y el avance de las paredes.
         if estado == "jugando" and posicion is not None:
+            lector.seguir(posicion)
             restante_turbo = max(0, restante_turbo - dt)
             turbo = a.FACTOR_TURBO if restante_turbo > 0 else 1
             y = mover(y, altura_objetivo(posicion), dt, turbo)
@@ -247,18 +294,18 @@ def jugar(pantalla, reloj, cap, sonido_paso, sonido_fin):
             if posicion is None:
                 escribir(pantalla, normal, "Pausa · Mostrá la linterna a la cámara", a.ALTO - 57)
         elif estado == "menu":
-            menu.dibujar(pantalla, titulo, normal, records, posicion)
+            menu.dibujar(pantalla, titulo, normal, chico, records)
+        elif estado in pantallas_calibracion:
+            dibujar_calibracion(pantalla, titulo, normal, estado, confirmar, error_camara)
         else:
             encabezado = "¡Llegaste al otro lado!" if estado == "victoria" else "¡Chocaste!"
             escribir(pantalla, titulo, encabezado, 172, a.BOLSO)
             escribir(pantalla, normal, f"{menu.nivel} · Puntaje {puntos} · Récord {records[menu.nivel]}", 245)
-            dibujar_tarjeta(pantalla, repetir, posicion is not None)
+            dibujar_tarjeta(pantalla, repetir, True)
             dibujar_tarjeta(pantalla, principal, False)
             escribir(pantalla, normal, "Volver a jugar", repetir.centery, x=repetir.centerx)
             escribir(pantalla, normal, "Volver al menú principal", principal.centery, x=principal.centerx)
             escribir(pantalla, normal, "Enter o R para repetir · Esc o M para volver al menú", 374)
-            if posicion is None:
-                escribir(pantalla, normal, "Mostrá la linterna para volver a jugar", 406, a.BOLSO)
             if not guardado:
                 escribir(pantalla, normal, "El récord quedó guardado solo durante esta sesión", 438)
         pygame.display.flip()

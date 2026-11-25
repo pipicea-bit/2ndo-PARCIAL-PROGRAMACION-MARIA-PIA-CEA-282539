@@ -22,7 +22,7 @@ class Menu:
             for x, nombre in zip((126, 278, 430, 582, 734), ANIMALES)
         }
         self.niveles = {
-            nivel: pygame.Rect(x - 76, 296, 152, 94)
+            nivel: pygame.Rect(x - 76, 313, 152, 77)
             for x, nivel in zip((108, 269, 430, 591, 752), a.DIFICULTADES)
         }
         self.boton = pygame.Rect(310, 430, 240, 44)
@@ -58,8 +58,8 @@ class Menu:
                 self.nivel = opciones[(opciones.index(self.nivel) + paso) % len(opciones)]
 
 
-    def dibujar(self, pantalla, titulo, normal, records, posicion):
-        """Muestra opciones, récords y estado de la linterna."""
+    def dibujar(self, pantalla, titulo, normal, chico, records):
+        """Muestra opciones, récords y el objetivo del nivel elegido."""
         escribir(pantalla, titulo, "Macaquito", 63, a.BOLSO)
         escribir(pantalla, normal, "Vuelo nocturno", 106)
         escribir(pantalla, normal, "Elegí tu animal", 137, a.BOLSO if self.fila_activa == "personajes" else a.TEXTO)
@@ -69,20 +69,17 @@ class Menu:
             escribir(pantalla, normal, nombre, 232, x=tarjeta.centerx)
 
         escribir(pantalla, normal, "Dificultad y modo", 277, a.BOLSO if self.fila_activa == "niveles" else a.TEXTO)
+        meta = a.METAS[self.nivel]
+        objetivo = "Jugá hasta chocar" if meta is None else f"Cruzá {meta} desfiladeros"
+        escribir(pantalla, chico, f"{self.nivel} · {objetivo}", 300)
         for nivel, tarjeta in self.niveles.items():
             dibujar_tarjeta(pantalla, tarjeta, nivel == self.nivel)
-            meta = a.METAS[nivel]
-            objetivo = "Sin límite" if meta is None else f"{meta} desfiladeros"
-            escribir(pantalla, normal, nivel, 316, x=tarjeta.centerx)
-            escribir(pantalla, normal, objetivo, 344, x=tarjeta.centerx)
-            escribir(pantalla, normal, f"Récord {records[nivel]} pts", 371, x=tarjeta.centerx)
+            escribir(pantalla, normal, nivel, 334, x=tarjeta.centerx)
+            escribir(pantalla, normal, f"Récord {records[nivel]} pts", 365, x=tarjeta.centerx)
 
-        listo = posicion is not None
-        pygame.draw.rect(pantalla, a.BOLSO if listo else a.ROCA, self.boton, border_radius=9)
-        escribir(pantalla, normal, "Jugar", self.boton.centery, a.FONDO if listo else a.TEXTO)
-        aviso = "Linterna detectada · Clic en Jugar o Espacio" if listo else "Mostrá la linterna a la cámara para jugar"
-        escribir(pantalla, normal, "Flechas para elegir · Enter o Espacio para jugar", 410)
-        escribir(pantalla, normal, aviso, 500)
+        pygame.draw.rect(pantalla, a.BOLSO, self.boton, border_radius=9)
+        escribir(pantalla, normal, "Jugar", self.boton.centery, a.FONDO)
+        escribir(pantalla, chico, "Flechas para elegir · Enter o Espacio para continuar", 505)
 
 
 def dibujar_tarjeta(pantalla, tarjeta, elegida):

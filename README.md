@@ -18,20 +18,20 @@ En Windows, activá el entorno con `.venv\Scripts\activate` en CMD. El programa 
 ## Cómo jugar
 
 - En el menú, elegí un mono, un zorro, un conejo, un panda o una rana y seleccioná la dificultad. Cada modo muestra su mejor puntaje guardado. Podés usar el mouse o las flechas (arriba/abajo para cambiar de fila, izquierda/derecha para cambiar la opción).
-- Encendé la linterna del celular y mostrá el foco a la webcam. Cuando aparezca el macaquito a la izquierda, presioná Enter o Espacio.
+- Elegí Jugar. Con la linterna apagada, registrá la luz ambiente. Luego encendé la linterna del celular y sostenela quieta mirando hacia la webcam. Cuando aparezca «Linterna detectada correctamente», elegí Empezar a volar o presioná Enter.
 - Subí la linterna para ascender y bajala para descender. La posición horizontal del piloto es fija. Los murciélagos suben y bajan entre las paredes y aparecen más seguido en las dificultades altas.
 - Agarrá las frutas rojas para activar cinco segundos de turbo. Durante ese tiempo volás más rápido y cada desfiladero cruzado vale dos puntos. La barra inferior muestra cuánto turbo queda. Otra fruta recarga la barra.
 - Si se pierde el foco, el juego se pausa. Volvé a mostrar la linterna para seguir.
-- Tras una victoria o un choque, elegí Volver a jugar o Volver al menú principal con el mouse. También podés pulsar Enter, Espacio o R para repetir la ronda si la linterna está visible, y Esc o M para volver al menú. La X cierra el juego.
+- Tras una victoria o un choque, elegí Volver a jugar o Volver al menú principal con el mouse. También podés pulsar Enter, Espacio o R para repetir la ronda tras volver a calibrar, y Esc o M para volver al menú. La X cierra el juego.
 
-Usá un entorno con luz tenue y un fondo sin ventanas, lámparas ni reflejos dentro del cuadro. Empezá a unos 60 cm de la webcam y probá el recorrido vertical en la pantalla inicial. Si el foco llena una parte grande de la imagen, alejá el teléfono. Si tu cámara no detecta el foco, revisá el permiso y ajustá los umbrales en `ajustes.py`.
+La calibración toma de referencia la luz que ya está en el cuadro. Mantené la webcam fija durante la partida. Si una ventana muy clara tapa el recorrido del foco, corré la cámara para que la linterna tenga un fondo visible. Empezá a unos 60 cm y alejá el teléfono si su luz satura gran parte de la imagen.
 
 ## Archivos
 
 | Archivo | Contenido |
 | --- | --- |
 | `main.py` | Pantallas, bucle, vuelo, choques y puntaje. Incluye la clase `Obstaculo`. |
-| `vision.py` | Abre la webcam, espeja el cuadro y devuelve el centro normalizado del foco como `(x, y)` o `None`. |
+| `vision.py` | Abre la webcam, registra la luz ambiente y devuelve el centro normalizado del foco como `(x, y)` o `None`. |
 | `menu.py` | Selección de personaje, dificultad y vista de récords. |
 | `animales.py` | Dibujos de los cinco pilotos. |
 | `puntajes.py` | Lectura y escritura de los récords locales. |
