@@ -6,16 +6,19 @@ from random import randint
 import pygame
 
 import ajustes as a
+from menu import Menu, dibujar_macaquito, escribir
+from puntajes import cargar, guardar
 from vision import abrir_camara, detectar
 
 
 class Obstaculo:
     """Dos paredes con un hueco que el macaquito debe atravesar."""
 
-    def __init__(self, x, puntos):
+    def __init__(self, x, puntos, dificultad):
         """Elige la posición vertical del hueco y lo ajusta al puntaje."""
         self.x = x
-        hueco = max(a.HUECO_MINIMO, a.HUECO_INICIAL - puntos * a.REDUCCION_HUECO)
+        _, _, inicial, minimo, reduccion = dificultad
+        hueco = max(minimo, inicial - puntos * reduccion)
         self.paso = randint(a.HUD + a.MARGEN_HUECO, a.ALTO - a.MARGEN_HUECO - hueco)
         self.fin_paso = self.paso + hueco
         self.contado = False
@@ -56,29 +59,15 @@ def cargar_sonidos():
     )
 
 
-def escribir(pantalla, fuente, texto, y, color=a.TEXTO):
-    """Dibuja una línea de texto centrada."""
-    imagen = fuente.render(texto, True, color)
-    pantalla.blit(imagen, imagen.get_rect(center=(a.ANCHO // 2, y)))
-
-
-def dibujar_macaquito(pantalla, y):
-    """Dibuja el personaje con su mochila amarilla."""
-    x, y = a.X_MACAQUITO, round(y)
-    pygame.draw.circle(pantalla, a.BOLSO, (x-18, y+7), 10)
-    pygame.draw.circle(pantalla, a.PELAJE, (x, y), a.RADIO)
-    pygame.draw.circle(pantalla, a.PELAJE, (x-15, y-17), 8)
-    pygame.draw.ellipse(pantalla, a.CARA, (x-12, y-11, 32, 27))
-    pygame.draw.circle(pantalla, a.FONDO, (x+9, y-4), 3)
-    pygame.draw.circle(pantalla, a.FONDO, (x+17, y+6), 3)
-
-
 def jugar(pantalla, reloj, cap, sonido_paso, sonido_fin):
     """Ejecuta la partida y permite reiniciar desde la pantalla final."""
     titulo = pygame.font.Font(None, 78)
     normal = pygame.font.Font(None, 29)
     estrellas = [(randint(0, a.ANCHO), randint(a.HUD, a.ALTO)) for _ in range(85)]
-    estado = "inicio"
+    estado = "menu"
+    menu = Menu()
+    records = cargar()
+    guardado = True
     y = (a.HUD + a.ALTO) / 2
 
     while True:
@@ -87,20 +76,28 @@ def jugar(pantalla, reloj, cap, sonido_paso, sonido_fin):
         for evento in pygame.event.get():
             if evento.type == pygame.QUIT:
                 return
-            if evento.type == pygame.KEYDOWN and evento.key == pygame.K_SPACE:
-                empezar = estado != "jugando"
+            if evento.type == pygame.KEYDOWN:
+                if evento.key == pygame.K_ESCAPE:
+                    estado = "menu"
+                    empezar = False
+                elif evento.key == pygame.K_SPACE and estado != "jugando":
+                    empezar = True
+            if estado == "menu" and evento.type == pygame.MOUSEBUTTONDOWN and evento.button == 1:
+                empezar = menu.pulsar(evento.pos) or empezar
 
         posicion = detectar(cap)
         if empezar and posicion is not None:
             puntos = 0
             y = altura_objetivo(posicion)
-            obstaculos = [Obstaculo(a.ANCHO, puntos)]
+            dificultad = a.DIFICULTADES[menu.nivel]
+            inicial, aumento, *_ = dificultad
+            obstaculos = [Obstaculo(a.ANCHO, puntos, dificultad)]
             estado = "jugando"
 
         # Al perder el foco se congela el vuelo y el avance de las paredes.
         if estado == "jugando" and posicion is not None:
             y = mover(y, altura_objetivo(posicion), dt)
-            velocidad = a.VELOCIDAD_INICIAL + puntos * a.AUMENTO_VELOCIDAD
+            velocidad = inicial + puntos * aumento
             for obstaculo in obstaculos:
                 obstaculo.x -= velocidad * dt
                 if any(choca(y, pared) for pared in obstaculo.paredes()):
@@ -110,13 +107,16 @@ def jugar(pantalla, reloj, cap, sonido_paso, sonido_fin):
                 if not obstaculo.contado and obstaculo.x + a.ANCHO_OBSTACULO < a.X_MACAQUITO - a.RADIO:
                     obstaculo.contado = True
                     puntos += 1
+                    if puntos > records[menu.nivel]:
+                        records[menu.nivel] = puntos
+                        guardado = guardar(records)
                     sonido_paso.play()
                     if puntos == a.META:
                         estado = "victoria"
                         break
 
             if obstaculos[-1].x <= a.ANCHO - a.ESPACIO_ENTRE_OBSTACULOS:
-                obstaculos.append(Obstaculo(a.ANCHO, puntos))
+                obstaculos.append(Obstaculo(a.ANCHO, puntos, dificultad))
             obstaculos = [o for o in obstaculos if o.x + a.ANCHO_OBSTACULO > 0]
             if estado != "jugando":
                 sonido_fin.play()
@@ -131,17 +131,20 @@ def jugar(pantalla, reloj, cap, sonido_paso, sonido_fin):
                 for pared in obstaculo.paredes():
                     pygame.draw.rect(pantalla, a.ROCA, pared)
                     pygame.draw.rect(pantalla, a.BORDE, pared, 3)
-            dibujar_macaquito(pantalla, y)
+            dibujar_macaquito(pantalla, a.X_MACAQUITO, y, menu.personaje)
             if posicion is None:
                 escribir(pantalla, normal, "Pausa · Mostrá la linterna a la cámara", a.ALTO - 27)
+        elif estado == "menu":
+            menu.dibujar(pantalla, titulo, normal, records, posicion)
         else:
-            encabezado = {"inicio": "Macaquito", "victoria": "¡Llegaste al otro lado!", "derrota": "¡Chocaste!"}[estado]
+            encabezado = "¡Llegaste al otro lado!" if estado == "victoria" else "¡Chocaste!"
             escribir(pantalla, titulo, encabezado, 172, a.BOLSO)
-            escribir(pantalla, normal, "Subí y bajá la linterna para cruzar 12 desfiladeros.", 245)
-            aviso = "Mostrá la linterna a la cámara" if posicion is None else "Presioná Espacio para volar"
+            escribir(pantalla, normal, f"{menu.nivel} · Puntaje {puntos} · Récord {records[menu.nivel]}", 245)
+            aviso = "Mostrá la linterna para volver a jugar" if posicion is None else "Espacio para volver a jugar"
             escribir(pantalla, normal, aviso, 285)
-            if posicion is not None:
-                dibujar_macaquito(pantalla, altura_objetivo(posicion))
+            escribir(pantalla, normal, "Esc para volver al menú", 320)
+            if not guardado:
+                escribir(pantalla, normal, "El récord quedó guardado solo durante esta sesión", 366)
         pygame.display.flip()
 
 

@@ -17,12 +17,18 @@ RADIO = 22
 VELOCIDAD_VERTICAL = 300
 ANCHO_OBSTACULO = 70
 ESPACIO_ENTRE_OBSTACULOS = 310
-HUECO_INICIAL = 210
-HUECO_MINIMO = 148
-REDUCCION_HUECO = 6
 MARGEN_HUECO = 34
-VELOCIDAD_INICIAL = 195
-AUMENTO_VELOCIDAD = 13
+# Cada nivel define velocidad inicial, aumento, hueco inicial, mínimo y reducción.
+DIFICULTADES = {
+    "Fácil": (150, 7, 250, 200, 4),
+    "Normal": (195, 13, 210, 148, 6),
+    "Difícil": (235, 15, 178, 125, 6),
+}
+PERSONAJES = {
+    "Coco": (PELAJE, CARA, BOLSO),
+    "Nube": ((137, 145, 174), (239, 219, 197), (130, 222, 245)),
+    "Chispa": ((175, 103, 112), (255, 210, 175), (245, 153, 196)),
+}
 META = 12
 CAMARA = 0
 BRILLO_MINIMO = 245
