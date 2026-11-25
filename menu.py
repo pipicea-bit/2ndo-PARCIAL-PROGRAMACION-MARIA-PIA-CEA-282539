@@ -3,6 +3,7 @@
 import pygame
 
 import ajustes as a
+from animales import ANIMALES, dibujar_macaquito
 
 
 def escribir(pantalla, fuente, texto, y, color=a.TEXTO, x=a.ANCHO // 2):
@@ -11,34 +12,22 @@ def escribir(pantalla, fuente, texto, y, color=a.TEXTO, x=a.ANCHO // 2):
     pantalla.blit(imagen, imagen.get_rect(center=(x, y)))
 
 
-def dibujar_macaquito(pantalla, x, y, personaje):
-    """Dibuja al personaje con los colores de la opción elegida."""
-    pelaje, cara, bolso = a.PERSONAJES[personaje]
-    y = round(y)
-    pygame.draw.circle(pantalla, bolso, (x-18, y+7), 10)
-    pygame.draw.circle(pantalla, pelaje, (x, y), a.RADIO)
-    pygame.draw.circle(pantalla, pelaje, (x-15, y-17), 8)
-    pygame.draw.ellipse(pantalla, cara, (x-12, y-11, 32, 27))
-    pygame.draw.circle(pantalla, a.FONDO, (x+9, y-4), 3)
-    pygame.draw.circle(pantalla, a.FONDO, (x+17, y+6), 3)
-
-
 class Menu:
     """Mantiene las opciones elegidas y comparte sus áreas de clic y dibujo."""
 
     def __init__(self):
-        """Prepara las tres tarjetas de cada fila y el botón de inicio."""
+        """Prepara las tarjetas de las dos filas y el botón de inicio."""
         centros = (230, 430, 630)
         self.personajes = {
-            nombre: pygame.Rect(x-92, 157, 184, 98)
-            for x, nombre in zip(centros, a.PERSONAJES)
+            nombre: pygame.Rect(x - 69, 157, 138, 98)
+            for x, nombre in zip((126, 278, 430, 582, 734), ANIMALES)
         }
         self.niveles = {
             nivel: pygame.Rect(x-92, 306, 184, 77)
             for x, nivel in zip(centros, a.DIFICULTADES)
         }
         self.boton = pygame.Rect(310, 430, 240, 44)
-        self.personaje = "Coco"
+        self.personaje = "Mono"
         self.nivel = "Normal"
 
     def pulsar(self, posicion):
@@ -55,7 +44,7 @@ class Menu:
         """Muestra opciones, récords y estado de la linterna."""
         escribir(pantalla, titulo, "Macaquito", 63, a.BOLSO)
         escribir(pantalla, normal, "Vuelo nocturno", 106)
-        escribir(pantalla, normal, "Elegí tu macaquito", 137)
+        escribir(pantalla, normal, "Elegí tu animal", 137)
         for nombre, tarjeta in self.personajes.items():
             dibujar_tarjeta(pantalla, tarjeta, nombre == self.personaje)
             dibujar_macaquito(pantalla, tarjeta.centerx, 190, nombre)
