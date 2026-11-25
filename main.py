@@ -1,5 +1,6 @@
 """Juego de vuelo controlado con la linterna del celular."""
 
+from math import sin
 from pathlib import Path
 from random import randint
 
@@ -14,14 +15,30 @@ from vision import abrir_camara, detectar
 class Obstaculo:
     """Dos paredes con un hueco que el macaquito debe atravesar."""
 
-    def __init__(self, x, puntos, dificultad):
+    def __init__(self, x, puntos, nivel, numero):
         """Elige la posición vertical del hueco y lo ajusta al puntaje."""
         self.x = x
-        _, _, inicial, minimo, reduccion = dificultad
+        _, _, inicial, minimo, reduccion = a.DIFICULTADES[nivel]
         hueco = max(minimo, inicial - puntos * reduccion)
         self.paso = randint(a.HUD + a.MARGEN_HUECO, a.ALTO - a.MARGEN_HUECO - hueco)
         self.fin_paso = self.paso + hueco
         self.contado = False
+        primero = a.PRIMER_MURCIELAGO[nivel]
+        intervalo = a.INTERVALO_MURCIELAGO[nivel]
+        self.con_murcielago = numero >= primero and (numero - primero) % intervalo == 0
+        self.fase = 0.0
+
+    def actualizar(self, velocidad, dt):
+        """Desplaza la pared y anima el vuelo del murciélago."""
+        self.x -= velocidad * dt
+        self.fase += a.FRECUENCIA_MURCIELAGO * dt
+
+    def murcielago(self):
+        """Devuelve el centro del murciélago asociado al desfiladero."""
+        return (
+            round(self.x + a.DISTANCIA_MURCIELAGO),
+            round((self.paso + self.fin_paso) / 2 + sin(self.fase) * a.AMPLITUD_MURCIELAGO),
+        )
 
     def paredes(self):
         """Devuelve los rectángulos que se dibujan y pueden causar un choque."""
@@ -48,6 +65,18 @@ def choca(y, pared):
     x = max(pared.left, min(a.X_MACAQUITO, pared.right))
     punto_y = max(pared.top, min(y, pared.bottom))
     return (a.X_MACAQUITO - x) ** 2 + (y - punto_y) ** 2 <= a.RADIO ** 2
+
+
+def dibujar_murcielago(pantalla, x, y):
+    """Dibuja alas angulares y ojos brillantes para distinguir el peligro."""
+    pygame.draw.polygon(
+        pantalla, a.COLOR_MURCIELAGO,
+        [(x - 15, y - 7), (x - 7, y - 2), (x, y - 10),
+         (x + 7, y - 2), (x + 15, y - 7), (x + 12, y + 5),
+         (x + 5, y + 3), (x, y + 10), (x - 5, y + 3), (x - 12, y + 5)],
+    )
+    for ojo in (x - 3, x + 3):
+        pygame.draw.circle(pantalla, a.OJOS_MURCIELAGO, (ojo, y - 1), 2)
 
 
 def cargar_sonidos():
@@ -89,9 +118,9 @@ def jugar(pantalla, reloj, cap, sonido_paso, sonido_fin):
         if empezar and posicion is not None:
             puntos = 0
             y = altura_objetivo(posicion)
-            dificultad = a.DIFICULTADES[menu.nivel]
-            inicial, aumento, *_ = dificultad
-            obstaculos = [Obstaculo(a.ANCHO, puntos, dificultad)]
+            inicial, aumento, *_ = a.DIFICULTADES[menu.nivel]
+            numero = 1
+            obstaculos = [Obstaculo(a.ANCHO, puntos, menu.nivel, numero)]
             estado = "jugando"
 
         # Al perder el foco se congela el vuelo y el avance de las paredes.
@@ -99,8 +128,15 @@ def jugar(pantalla, reloj, cap, sonido_paso, sonido_fin):
             y = mover(y, altura_objetivo(posicion), dt)
             velocidad = inicial + puntos * aumento
             for obstaculo in obstaculos:
-                obstaculo.x -= velocidad * dt
-                if any(choca(y, pared) for pared in obstaculo.paredes()):
+                obstaculo.actualizar(velocidad, dt)
+                choque_murcielago = False
+                if obstaculo.con_murcielago:
+                    x_m, y_m = obstaculo.murcielago()
+                    choque_murcielago = (
+                        (a.X_MACAQUITO - x_m) ** 2 + (y - y_m) ** 2
+                        <= (a.RADIO + a.RADIO_MURCIELAGO) ** 2
+                    )
+                if choque_murcielago or any(choca(y, pared) for pared in obstaculo.paredes()):
                     estado = "derrota"
                     break
                 # El paso cuenta una vez, cuando el personaje ya salió del hueco.
@@ -116,8 +152,14 @@ def jugar(pantalla, reloj, cap, sonido_paso, sonido_fin):
                         break
 
             if obstaculos[-1].x <= a.ANCHO - a.ESPACIO_ENTRE_OBSTACULOS:
-                obstaculos.append(Obstaculo(a.ANCHO, puntos, dificultad))
-            obstaculos = [o for o in obstaculos if o.x + a.ANCHO_OBSTACULO > 0]
+                numero += 1
+                obstaculos.append(Obstaculo(a.ANCHO, puntos, menu.nivel, numero))
+            # El murciélago viene detrás de la pared y sigue activo al salir esta.
+            obstaculos = [
+                o for o in obstaculos
+                if o.x + a.ANCHO_OBSTACULO > 0
+                or (o.con_murcielago and o.murcielago()[0] + a.RADIO_MURCIELAGO > 0)
+            ]
             if estado != "jugando":
                 sonido_fin.play()
 
@@ -131,6 +173,8 @@ def jugar(pantalla, reloj, cap, sonido_paso, sonido_fin):
                 for pared in obstaculo.paredes():
                     pygame.draw.rect(pantalla, a.ROCA, pared)
                     pygame.draw.rect(pantalla, a.BORDE, pared, 3)
+                if obstaculo.con_murcielago:
+                    dibujar_murcielago(pantalla, *obstaculo.murcielago())
             dibujar_macaquito(pantalla, a.X_MACAQUITO, y, menu.personaje)
             if posicion is None:
                 escribir(pantalla, normal, "Pausa · Mostrá la linterna a la cámara", a.ALTO - 27)
