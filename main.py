@@ -7,7 +7,8 @@ from random import randint
 import pygame
 
 import ajustes as a
-from menu import Menu, dibujar_macaquito, escribir
+from animales import dibujar_macaquito
+from menu import Menu, dibujar_tarjeta, escribir
 from puntajes import cargar, guardar
 from vision import abrir_camara, detectar
 
@@ -26,7 +27,15 @@ class Obstaculo:
         primero = a.PRIMER_MURCIELAGO[nivel]
         intervalo = a.INTERVALO_MURCIELAGO[nivel]
         self.con_murcielago = numero >= primero and (numero - primero) % intervalo == 0
+        self.con_fruta = numero % a.INTERVALO_FRUTA == 1 and not self.con_murcielago
         self.fase = 0.0
+
+    def fruta(self):
+        """Devuelve el centro de la fruta flotante detrás de la pared."""
+        return (
+            round(self.x + a.DISTANCIA_FRUTA),
+            round((self.paso + self.fin_paso) / 2 + sin(self.fase) * a.AMPLITUD_FRUTA),
+        )
 
     def actualizar(self, velocidad, dt):
         """Desplaza la pared y anima el vuelo del murciélago."""
@@ -54,9 +63,9 @@ def altura_objetivo(posicion):
     return a.HUD + a.RADIO + y * (a.ALTO - a.HUD - 2 * a.RADIO)
 
 
-def mover(y, objetivo, dt):
+def mover(y, objetivo, dt, turbo):
     """Acerca el personaje al objetivo con una velocidad máxima."""
-    limite = a.VELOCIDAD_VERTICAL * dt
+    limite = a.VELOCIDAD_VERTICAL * dt * turbo
     return y + max(-limite, min(limite, objetivo - y))
 
 
@@ -79,6 +88,31 @@ def dibujar_murcielago(pantalla, x, y):
         pygame.draw.circle(pantalla, a.OJOS_MURCIELAGO, (ojo, y - 1), 2)
 
 
+def cerca(y, centro, radio):
+    """Indica si el piloto toca un objeto de centro y radio conocidos."""
+    x_objeto, y_objeto = centro
+    return (a.X_MACAQUITO - x_objeto) ** 2 + (y - y_objeto) ** 2 <= (a.RADIO + radio) ** 2
+
+
+def dibujar_fruta(pantalla, x, y):
+    """Dibuja una fruta roja con una hoja verde."""
+    pygame.draw.circle(pantalla, a.COLOR_FRUTA, (x, y), a.RADIO_FRUTA)
+    pygame.draw.circle(pantalla, a.TEXTO, (x - 4, y - 3), 2)
+    pygame.draw.ellipse(pantalla, a.COLOR_HOJA, (x, y - 18, 12, 8))
+
+
+def dibujar_turbo(pantalla, fuente, restante):
+    """Muestra la duración del poder en una barra que se vacía."""
+    barra = pygame.Rect(a.ANCHO // 2 - 135, a.ALTO - 20, 270, 9)
+    pygame.draw.rect(pantalla, a.FONDO, barra.inflate(12, 30), border_radius=6)
+    pygame.draw.rect(pantalla, a.ROCA, barra, border_radius=4)
+    ancho = round(barra.width * restante / a.DURACION_TURBO)
+    if ancho:
+        lleno = pygame.Rect(barra.x, barra.y, ancho, barra.height)
+        pygame.draw.rect(pantalla, a.COLOR_HOJA, lleno, border_radius=4)
+    escribir(pantalla, fuente, "Turbo · Puntos x2", a.ALTO - 29, a.COLOR_HOJA)
+
+
 def cargar_sonidos():
     """Carga los dos efectos antes de iniciar el bucle."""
     carpeta = Path(__file__).resolve().parent / "sonidos"
@@ -97,6 +131,8 @@ def jugar(pantalla, reloj, cap, sonido_paso, sonido_fin):
     menu = Menu()
     records = cargar()
     guardado = True
+    repetir = pygame.Rect(164, 294, 250, 52)
+    principal = pygame.Rect(446, 294, 250, 52)
     y = (a.HUD + a.ALTO) / 2
 
     while True:
@@ -109,15 +145,34 @@ def jugar(pantalla, reloj, cap, sonido_paso, sonido_fin):
                 if evento.key == pygame.K_ESCAPE:
                     estado = "menu"
                     empezar = False
-                elif evento.key == pygame.K_SPACE and estado != "jugando":
-                    empezar = True
-            if estado == "menu" and evento.type == pygame.MOUSEBUTTONDOWN and evento.button == 1:
-                empezar = menu.pulsar(evento.pos) or empezar
+                elif estado == "menu":
+                    if evento.key in (pygame.K_SPACE, pygame.K_RETURN):
+                        empezar = True
+                    else:
+                        menu.tecla(evento.key)
+                elif estado in ("victoria", "derrota"):
+                    if evento.key in (pygame.K_SPACE, pygame.K_RETURN, pygame.K_r):
+                        empezar = True
+                    elif evento.key == pygame.K_m:
+                        estado = "menu"
+                        empezar = False
+            if evento.type == pygame.MOUSEBUTTONDOWN and evento.button == 1:
+                if estado == "menu":
+                    empezar = menu.pulsar(evento.pos) or empezar
+                elif estado in ("victoria", "derrota"):
+                    if repetir.collidepoint(evento.pos):
+                        empezar = True
+                    elif principal.collidepoint(evento.pos):
+                        estado = "menu"
+                        empezar = False
 
         posicion = detectar(cap)
         if empezar and posicion is not None:
             puntos = 0
+            cruces = 0
+            restante_turbo = 0.0
             y = altura_objetivo(posicion)
+            meta = a.METAS[menu.nivel]
             inicial, aumento, *_ = a.DIFICULTADES[menu.nivel]
             numero = 1
             obstaculos = [Obstaculo(a.ANCHO, puntos, menu.nivel, numero)]
@@ -125,40 +180,48 @@ def jugar(pantalla, reloj, cap, sonido_paso, sonido_fin):
 
         # Al perder el foco se congela el vuelo y el avance de las paredes.
         if estado == "jugando" and posicion is not None:
-            y = mover(y, altura_objetivo(posicion), dt)
-            velocidad = inicial + puntos * aumento
+            restante_turbo = max(0, restante_turbo - dt)
+            turbo = a.FACTOR_TURBO if restante_turbo > 0 else 1
+            y = mover(y, altura_objetivo(posicion), dt, turbo)
+            velocidad = inicial + cruces * aumento
+            if meta is None:
+                # Survival sigue generando obstáculos a una velocidad que permite esquivarlos.
+                velocidad = min(velocidad, a.VELOCIDAD_MAXIMA_SURVIVAL)
+            velocidad *= turbo
             for obstaculo in obstaculos:
                 obstaculo.actualizar(velocidad, dt)
-                choque_murcielago = False
-                if obstaculo.con_murcielago:
-                    x_m, y_m = obstaculo.murcielago()
-                    choque_murcielago = (
-                        (a.X_MACAQUITO - x_m) ** 2 + (y - y_m) ** 2
-                        <= (a.RADIO + a.RADIO_MURCIELAGO) ** 2
-                    )
+                choque_murcielago = obstaculo.con_murcielago and cerca(
+                    y, obstaculo.murcielago(), a.RADIO_MURCIELAGO
+                )
                 if choque_murcielago or any(choca(y, pared) for pared in obstaculo.paredes()):
                     estado = "derrota"
                     break
-                # El paso cuenta una vez, cuando el personaje ya salió del hueco.
+                if obstaculo.con_fruta and cerca(y, obstaculo.fruta(), a.RADIO_FRUTA):
+                    obstaculo.con_fruta = False
+                    restante_turbo = a.DURACION_TURBO
+                    sonido_paso.play()
+                # El poder duplica el puntaje de cada cruce, sin duplicar los desfiladeros cruzados.
                 if not obstaculo.contado and obstaculo.x + a.ANCHO_OBSTACULO < a.X_MACAQUITO - a.RADIO:
                     obstaculo.contado = True
-                    puntos += 1
+                    cruces += 1
+                    puntos += a.PUNTOS_TURBO if restante_turbo > 0 else 1
                     if puntos > records[menu.nivel]:
                         records[menu.nivel] = puntos
                         guardado = guardar(records)
                     sonido_paso.play()
-                    if puntos == a.META:
+                    if cruces == meta:
                         estado = "victoria"
                         break
 
             if obstaculos[-1].x <= a.ANCHO - a.ESPACIO_ENTRE_OBSTACULOS:
                 numero += 1
-                obstaculos.append(Obstaculo(a.ANCHO, puntos, menu.nivel, numero))
-            # El murciélago viene detrás de la pared y sigue activo al salir esta.
+                obstaculos.append(Obstaculo(a.ANCHO, cruces, menu.nivel, numero))
+            # Los objetos flotantes siguen activos después de que sale la pared.
             obstaculos = [
                 o for o in obstaculos
                 if o.x + a.ANCHO_OBSTACULO > 0
                 or (o.con_murcielago and o.murcielago()[0] + a.RADIO_MURCIELAGO > 0)
+                or (o.con_fruta and o.fruta()[0] + a.RADIO_FRUTA > 0)
             ]
             if estado != "jugando":
                 sonido_fin.play()
@@ -168,27 +231,36 @@ def jugar(pantalla, reloj, cap, sonido_paso, sonido_fin):
             pygame.draw.circle(pantalla, a.ESTRELLA, estrella, 2)
         if estado == "jugando":
             pygame.draw.line(pantalla, a.BORDE, (0, a.HUD), (a.ANCHO, a.HUD))
-            escribir(pantalla, normal, f"Desfiladeros cruzados: {puntos}/{a.META}", 30)
+            avance = str(cruces) if meta is None else f"{cruces}/{meta}"
+            escribir(pantalla, normal, f"{menu.nivel}    ·    Desfiladeros {avance}    ·    Puntos {puntos}", 30)
             for obstaculo in obstaculos:
                 for pared in obstaculo.paredes():
                     pygame.draw.rect(pantalla, a.ROCA, pared)
                     pygame.draw.rect(pantalla, a.BORDE, pared, 3)
                 if obstaculo.con_murcielago:
                     dibujar_murcielago(pantalla, *obstaculo.murcielago())
+                if obstaculo.con_fruta:
+                    dibujar_fruta(pantalla, *obstaculo.fruta())
             dibujar_macaquito(pantalla, a.X_MACAQUITO, y, menu.personaje)
+            if restante_turbo > 0:
+                dibujar_turbo(pantalla, normal, restante_turbo)
             if posicion is None:
-                escribir(pantalla, normal, "Pausa · Mostrá la linterna a la cámara", a.ALTO - 27)
+                escribir(pantalla, normal, "Pausa · Mostrá la linterna a la cámara", a.ALTO - 57)
         elif estado == "menu":
             menu.dibujar(pantalla, titulo, normal, records, posicion)
         else:
             encabezado = "¡Llegaste al otro lado!" if estado == "victoria" else "¡Chocaste!"
             escribir(pantalla, titulo, encabezado, 172, a.BOLSO)
             escribir(pantalla, normal, f"{menu.nivel} · Puntaje {puntos} · Récord {records[menu.nivel]}", 245)
-            aviso = "Mostrá la linterna para volver a jugar" if posicion is None else "Espacio para volver a jugar"
-            escribir(pantalla, normal, aviso, 285)
-            escribir(pantalla, normal, "Esc para volver al menú", 320)
+            dibujar_tarjeta(pantalla, repetir, posicion is not None)
+            dibujar_tarjeta(pantalla, principal, False)
+            escribir(pantalla, normal, "Volver a jugar", repetir.centery, x=repetir.centerx)
+            escribir(pantalla, normal, "Volver al menú principal", principal.centery, x=principal.centerx)
+            escribir(pantalla, normal, "Enter o R para repetir · Esc o M para volver al menú", 374)
+            if posicion is None:
+                escribir(pantalla, normal, "Mostrá la linterna para volver a jugar", 406, a.BOLSO)
             if not guardado:
-                escribir(pantalla, normal, "El récord quedó guardado solo durante esta sesión", 366)
+                escribir(pantalla, normal, "El récord quedó guardado solo durante esta sesión", 438)
         pygame.display.flip()
 
 

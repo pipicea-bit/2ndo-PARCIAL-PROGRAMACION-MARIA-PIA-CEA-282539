@@ -4,7 +4,7 @@ import json
 from pathlib import Path
 from tempfile import NamedTemporaryFile
 
-from ajustes import DIFICULTADES, META
+from ajustes import METAS, PUNTOS_TURBO
 
 ARCHIVO = Path(__file__).resolve().with_name("records.json")
 
@@ -17,11 +17,12 @@ def cargar():
         datos = {}
     if not isinstance(datos, dict):
         datos = {}
-    return {
-        nivel: puntos if type(puntos) is int and 0 <= puntos <= META else 0
-        for nivel in DIFICULTADES
-        for puntos in (datos.get(nivel),)
-    }
+    records = dict.fromkeys(METAS, 0)
+    for nivel, meta in METAS.items():
+        puntos = datos.get(nivel, 0)
+        if type(puntos) is int and puntos >= 0:
+            records[nivel] = puntos if meta is None else min(puntos, meta * PUNTOS_TURBO)
+    return records
 
 
 def guardar(records):
