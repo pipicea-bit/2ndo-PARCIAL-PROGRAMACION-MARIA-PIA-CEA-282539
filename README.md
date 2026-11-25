@@ -1,6 +1,6 @@
 # Macaquito · Vuelo nocturno
 
-Guiá a un macaquito con la linterna del celular. Cruzá 12 desfiladeros sin chocar. A medida que sumás puntos, las paredes avanzan más rápido y los próximos huecos se achican.
+Guiá a tu piloto con la linterna del celular. Cruzá 12 desfiladeros sin chocar con las paredes ni con los murciélagos. A medida que sumás puntos, las paredes avanzan más rápido y los próximos huecos se achican.
 
 ## Instalación
 
@@ -17,9 +17,9 @@ En Windows, activá el entorno con `.venv\Scripts\activate` en CMD. El programa 
 
 ## Cómo jugar
 
-- En el menú, elegí un macaquito y una dificultad. Cada nivel muestra su mejor puntaje guardado.
+- En el menú, elegí un mono, un zorro, un conejo, un panda o una rana y seleccioná la dificultad. Cada nivel muestra su mejor puntaje guardado.
 - Encendé la linterna del celular y mostrá el foco a la webcam. Cuando aparezca el macaquito a la izquierda, presioná Espacio.
-- Subí la linterna para ascender y bajala para descender. La posición horizontal del macaquito es fija.
+- Subí la linterna para ascender y bajala para descender. La posición horizontal del piloto es fija. Los murciélagos suben y bajan entre las paredes y aparecen más seguido en las dificultades altas.
 - Si se pierde el foco, el juego se pausa. Volvé a mostrar la linterna para seguir.
 - Tras una victoria o un choque, mostrá la linterna y presioná Espacio para volver a jugar. Esc vuelve al menú y la X cierra el juego.
 
@@ -32,6 +32,7 @@ Usá un entorno con luz tenue y un fondo sin ventanas, lámparas ni reflejos den
 | `main.py` | Pantallas, bucle, vuelo, choques y puntaje. Incluye la clase `Obstaculo`. |
 | `vision.py` | Abre la webcam, espeja el cuadro y devuelve el centro normalizado del foco como `(x, y)` o `None`. |
 | `menu.py` | Selección de personaje, dificultad y vista de récords. |
+| `animales.py` | Dibujos de los cinco pilotos. |
 | `puntajes.py` | Lectura y escritura de los récords locales. |
 | `ajustes.py` | Colores, dimensiones, velocidades, dificultad y umbrales de detección. |
 
