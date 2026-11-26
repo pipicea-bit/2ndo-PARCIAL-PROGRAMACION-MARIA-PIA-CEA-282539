@@ -4,7 +4,8 @@ import cv2
 
 from ajustes import (
     AREA_MINIMA, AUMENTO_BRILLO_MINIMO, BRILLO_MINIMO, CAMARA,
-    CUADROS_CONFIRMACION, DESPLAZAMIENTO_CONFIRMACION, FILTRO, FRACCION_MAXIMA,
+    CONTRASTE_FOCO_MINIMO, CUADROS_CONFIRMACION, CUADROS_PERDIDOS_CONFIRMACION,
+    DESPLAZAMIENTO_CONFIRMACION, FILTRO, FRACCION_MAXIMA, VENTANA_CONTRASTE,
 )
 
 KERNEL = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, FILTRO)
@@ -32,6 +33,7 @@ class LectorLinterna:
         self.ambiente = None
         self.anterior = None
         self.consecutivos = 0
+        self.perdidos = 0
 
     def registrar_ambiente(self):
         """Guarda la referencia que debe tomarse con la linterna apagada."""
@@ -42,6 +44,7 @@ class LectorLinterna:
         self.ambiente = cv2.dilate(ambiente, KERNEL)
         self.anterior = None
         self.consecutivos = 0
+        self.perdidos = 0
         return True
 
     def detectar(self):
@@ -50,38 +53,42 @@ class LectorLinterna:
         if gris is None or self.ambiente is None or gris.shape != self.ambiente.shape:
             return None
 
+        # El foco debe destacar sobre la referencia y sobre sus alrededores.
         aumento = cv2.subtract(gris, self.ambiente)
+        contraste = cv2.subtract(gris, cv2.blur(gris, VENTANA_CONTRASTE))
         mascara = cv2.bitwise_and(
             cv2.inRange(gris, BRILLO_MINIMO, 255),
             cv2.inRange(aumento, AUMENTO_BRILLO_MINIMO, 255),
         )
-        mascara = cv2.morphologyEx(mascara, cv2.MORPH_OPEN, KERNEL)
-        contornos, _ = cv2.findContours(
-            mascara, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE
-        )
+        mascara = cv2.bitwise_and(mascara, cv2.inRange(contraste, CONTRASTE_FOCO_MINIMO, 255))
+        cantidad, _, datos, centros = cv2.connectedComponentsWithStats(mascara)
         alto, ancho = gris.shape
         area_maxima = alto * ancho * FRACCION_MAXIMA
         focos = [
-            contorno for contorno in contornos
-            if AREA_MINIMA <= cv2.contourArea(contorno) <= area_maxima
+            i for i in range(1, cantidad)
+            if AREA_MINIMA <= datos[i, cv2.CC_STAT_AREA] <= area_maxima
         ]
         if not focos:
             return None
 
-        centro = centro_normalizado(max(focos, key=cv2.contourArea), ancho, alto)
-        if self.anterior is not None:
-            centro = min(
-                (centro_normalizado(foco, ancho, alto) for foco in focos),
-                key=lambda punto: distancia2(punto, self.anterior),
-            )
-        return centro
+        posiciones = {
+            i: (centros[i, 0] / ancho, centros[i, 1] / alto) for i in focos
+        }
+        if self.anterior is None:
+            foco = max(focos, key=lambda i: datos[i, cv2.CC_STAT_AREA])
+        else:
+            foco = min(focos, key=lambda i: distancia2(posiciones[i], self.anterior))
+        return posiciones[foco]
 
     def confirmar(self, posicion):
         """Confirma el foco tras varios cuadros seguidos en la misma zona."""
         if posicion is None:
-            self.anterior = None
-            self.consecutivos = 0
+            self.perdidos += 1
+            if self.perdidos > CUADROS_PERDIDOS_CONFIRMACION:
+                self.anterior = None
+                self.consecutivos = 0
             return False
+        self.perdidos = 0
         limite = DESPLAZAMIENTO_CONFIRMACION ** 2
         if self.anterior is None or distancia2(posicion, self.anterior) > limite:
             self.consecutivos = 0
@@ -93,12 +100,6 @@ class LectorLinterna:
         """Actualiza la referencia del último punto válido durante el vuelo."""
         if posicion is not None:
             self.anterior = posicion
-
-
-def centro_normalizado(contorno, ancho, alto):
-    """Calcula el centro del contorno en proporciones del cuadro."""
-    momentos = cv2.moments(contorno)
-    return momentos["m10"] / momentos["m00"] / ancho, momentos["m01"] / momentos["m00"] / alto
 
 
 def distancia2(primero, segundo):

@@ -72,10 +72,10 @@ class Menu:
         escribir(pantalla, normal, "Dificultad y modo", 277, a.BOLSO if self.fila_activa == "niveles" else a.TEXTO)
         meta = a.METAS[self.nivel]
         objetivo = "Jugá hasta chocar" if meta is None else f"Cruzá {meta} desfiladeros"
-        escribir(pantalla, chico, f"{self.nivel} · {objetivo}", 300)
+        escribir(pantalla, chico, objetivo, 300)
         for nivel, tarjeta in self.niveles.items():
             dibujar_tarjeta(pantalla, tarjeta, nivel == self.nivel, tarjeta.collidepoint(cursor))
-            escribir(pantalla, normal, nivel, 334, x=tarjeta.centerx)
+            escribir(pantalla, normal, nivel.upper(), 334, x=tarjeta.centerx)
             escribir(pantalla, normal, f"Récord {records[nivel]} pts", 365, x=tarjeta.centerx)
 
         color_boton = a.TEXTO if self.boton.collidepoint(cursor) else a.BOLSO
