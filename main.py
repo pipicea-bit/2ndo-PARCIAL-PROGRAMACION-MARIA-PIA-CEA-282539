@@ -180,9 +180,10 @@ def dibujar_calibracion(pantalla, titulo, normal, estado, boton, error):
 
 def jugar(pantalla, reloj, cap, sonido_paso, sonido_fin):
     """Ejecuta la partida y permite reiniciar desde la pantalla final."""
-    titulo = pygame.font.Font(None, 78)
-    normal = pygame.font.Font(None, 29)
-    chico = pygame.font.Font(None, 23)
+    familias = ("trebuchetms", "verdana", "arial", "dejavusans")
+    titulo = pygame.font.SysFont(familias, 56, bold=True)
+    normal = pygame.font.SysFont(familias, 20)
+    chico = pygame.font.SysFont(familias, 16)
     estrellas = [(randint(0, a.ANCHO), randint(a.HUD, a.ALTO)) for _ in range(85)]
     estado = "menu"
     menu = Menu()

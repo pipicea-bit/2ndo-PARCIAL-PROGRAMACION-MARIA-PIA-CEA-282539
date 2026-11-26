@@ -60,11 +60,12 @@ class Menu:
 
     def dibujar(self, pantalla, titulo, normal, chico, records):
         """Muestra opciones, récords y el objetivo del nivel elegido."""
+        cursor = pygame.mouse.get_pos()
         escribir(pantalla, titulo, a.TITULO, 63, a.BOLSO)
         escribir(pantalla, normal, "Vuelo nocturno", 106)
         escribir(pantalla, normal, "Elegí tu animal", 137, a.BOLSO if self.fila_activa == "personajes" else a.TEXTO)
         for nombre, tarjeta in self.personajes.items():
-            dibujar_tarjeta(pantalla, tarjeta, nombre == self.personaje)
+            dibujar_tarjeta(pantalla, tarjeta, nombre == self.personaje, tarjeta.collidepoint(cursor))
             dibujar_macaquito(pantalla, tarjeta.centerx, 190, nombre)
             escribir(pantalla, normal, nombre, 232, x=tarjeta.centerx)
 
@@ -73,18 +74,19 @@ class Menu:
         objetivo = "Jugá hasta chocar" if meta is None else f"Cruzá {meta} desfiladeros"
         escribir(pantalla, chico, f"{self.nivel} · {objetivo}", 300)
         for nivel, tarjeta in self.niveles.items():
-            dibujar_tarjeta(pantalla, tarjeta, nivel == self.nivel)
+            dibujar_tarjeta(pantalla, tarjeta, nivel == self.nivel, tarjeta.collidepoint(cursor))
             escribir(pantalla, normal, nivel, 334, x=tarjeta.centerx)
             escribir(pantalla, normal, f"Récord {records[nivel]} pts", 365, x=tarjeta.centerx)
 
-        pygame.draw.rect(pantalla, a.BOLSO, self.boton, border_radius=9)
+        color_boton = a.TEXTO if self.boton.collidepoint(cursor) else a.BOLSO
+        pygame.draw.rect(pantalla, color_boton, self.boton, border_radius=9)
         escribir(pantalla, normal, "Jugar", self.boton.centery, a.FONDO)
-        escribir(pantalla, chico, "Flechas para elegir · Enter o Espacio para continuar", 505)
+        escribir(pantalla, chico, "Clic o flechas para elegir · Enter o Espacio para continuar", 505)
 
 
-def dibujar_tarjeta(pantalla, tarjeta, elegida):
-    """Resalta la opción actual con un borde amarillo."""
-    pygame.draw.rect(pantalla, a.ROCA, tarjeta, border_radius=12)
-    pygame.draw.rect(
-        pantalla, a.BOLSO if elegida else a.BORDE, tarjeta, 2, border_radius=12
-    )
+def dibujar_tarjeta(pantalla, tarjeta, elegida, apuntada=False):
+    """Resalta la selección y da respuesta cuando el cursor apunta a la tarjeta."""
+    fondo = a.TARJETA_HOVER if apuntada else a.ROCA
+    borde = a.BOLSO if elegida else a.TEXTO if apuntada else a.BORDE
+    pygame.draw.rect(pantalla, fondo, tarjeta, border_radius=12)
+    pygame.draw.rect(pantalla, borde, tarjeta, 2, border_radius=12)
