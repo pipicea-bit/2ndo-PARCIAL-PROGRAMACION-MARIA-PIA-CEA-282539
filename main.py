@@ -145,17 +145,18 @@ def cargar_sonidos():
     )
 
 
-def dibujar_calibracion(pantalla, titulo, normal, estado, boton, error):
+def dibujar_calibracion(pantalla, titulo, normal, estado, boton, error, vista, posicion):
     """Guía la toma de luz ambiente, la detección y el inicio del vuelo."""
     if estado == "ambiente":
         escribir(pantalla, titulo, "Apagá la linterna", 128, a.BOLSO)
         escribir(pantalla, normal, "Dejá la cámara apuntando al lugar de juego y registrá la luz ambiente.", 226)
         etiqueta = "Registrar luz ambiente"
     elif estado == "buscar":
-        escribir(pantalla, normal, "Luz ambiente registrada", 128, a.COLOR_HOJA)
-        escribir(pantalla, titulo, "Encendé la linterna", 204, a.BOLSO)
-        escribir(pantalla, normal, "Mostrala a la webcam y mantenela quieta un momento.", 270)
-        escribir(pantalla, normal, "Buscando la linterna…", 345)
+        escribir(pantalla, normal, "Luz ambiente registrada", 64, a.COLOR_HOJA)
+        escribir(pantalla, titulo, "Encendé la linterna", 123, a.BOLSO)
+        escribir(pantalla, normal, "Apuntá la luz a la webcam y mantenela quieta en el recuadro.", 183)
+        dibujar_vista(pantalla, vista, posicion, 216)
+        escribir(pantalla, normal, "Buscando la linterna…", 405)
         etiqueta = None
     else:
         escribir(pantalla, titulo, "Prepará tu linterna", 128, a.BOLSO)
@@ -168,6 +169,7 @@ def dibujar_calibracion(pantalla, titulo, normal, estado, boton, error):
         escribir(pantalla, normal, "Linterna detectada correctamente", 226, a.COLOR_HOJA)
         escribir(pantalla, normal, "Mové el celular hacia arriba y abajo para controlar a tu animal.", 263)
         etiqueta = "Empezar a volar"
+        dibujar_vista(pantalla, vista, posicion, 369)
 
     if etiqueta is not None:
         dibujar_tarjeta(pantalla, boton, True)
@@ -175,7 +177,23 @@ def dibujar_calibracion(pantalla, titulo, normal, estado, boton, error):
     if error:
         escribir(pantalla, normal, "No se pudo leer la cámara. Revisá los permisos y volvé a intentar.", 415, a.BOLSO)
     ayuda = "Esc para volver" if etiqueta is None else "Enter o clic para confirmar · Esc para volver"
-    escribir(pantalla, normal, ayuda, 481)
+    escribir(pantalla, normal, ayuda, 516 if estado == "listo" else 481)
+
+
+def dibujar_vista(pantalla, vista, posicion, y):
+    """Muestra la vista espejada y marca el foco con un recuadro."""
+    if vista is None:
+        return
+    ancho, alto = 240, 140
+    marco = pygame.Rect((a.ANCHO - ancho) // 2, y, ancho, alto)
+    pantalla.blit(pygame.image.frombuffer(vista, (ancho, alto), "RGB"), marco)
+    if posicion is None:
+        guia = marco.inflate(-2 * ancho * a.MARGEN_GUIA_LINTERNA, -2 * alto * a.MARGEN_GUIA_LINTERNA)
+        pygame.draw.rect(pantalla, a.BOLSO, guia, 2)
+    else:
+        foco = pygame.Rect(0, 0, 25, 25)
+        foco.center = (marco.x + round(posicion[0] * ancho), marco.y + round(posicion[1] * alto))
+        pygame.draw.rect(pantalla, a.COLOR_HOJA, foco.clip(marco), 2)
 
 
 def jugar(pantalla, reloj, cap, sonido_paso, sonido_fin):
@@ -234,7 +252,7 @@ def jugar(pantalla, reloj, cap, sonido_paso, sonido_fin):
 
         posicion = None
         if estado in ("buscar", "listo", "jugando"):
-            posicion = lector.detectar()
+            posicion = lector.detectar(mostrar=estado != "jugando")
         if empezar and estado in ("menu", "victoria", "derrota"):
             estado = "ambiente"
             error_camara = False
@@ -334,7 +352,7 @@ def jugar(pantalla, reloj, cap, sonido_paso, sonido_fin):
         elif estado == "menu":
             menu.dibujar(pantalla, titulo, normal, chico, records)
         elif estado in pantallas_calibracion:
-            dibujar_calibracion(pantalla, titulo, normal, estado, confirmar, error_camara)
+            dibujar_calibracion(pantalla, titulo, normal, estado, confirmar, error_camara, lector.vista, posicion)
         else:
             encabezado = "¡Llegaste al otro lado!" if estado == "victoria" else "¡Chocaste!"
             escribir(pantalla, titulo, encabezado, 172, a.BOLSO)

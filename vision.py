@@ -5,7 +5,8 @@ import cv2
 from ajustes import (
     AREA_MINIMA, AUMENTO_BRILLO_MINIMO, BRILLO_MINIMO, CAMARA,
     CONTRASTE_FOCO_MINIMO, CUADROS_CONFIRMACION, CUADROS_PERDIDOS_CONFIRMACION,
-    DESPLAZAMIENTO_CONFIRMACION, FILTRO, FRACCION_MAXIMA, VENTANA_CONTRASTE,
+    DESPLAZAMIENTO_CONFIRMACION, FACTOR_AREA_FOCO, FILTRO, FRACCION_MAXIMA,
+    MARGEN_GUIA_LINTERNA, TOLERANCIA_BRILLO_FOCO, VENTANA_CONTRASTE,
 )
 
 KERNEL = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, FILTRO)
@@ -34,6 +35,9 @@ class LectorLinterna:
         self.anterior = None
         self.consecutivos = 0
         self.perdidos = 0
+        self.perfil = None
+        self.candidato = None
+        self.vista = None
 
     def registrar_ambiente(self):
         """Guarda la referencia que debe tomarse con la linterna apagada."""
@@ -45,40 +49,68 @@ class LectorLinterna:
         self.anterior = None
         self.consecutivos = 0
         self.perdidos = 0
+        self.perfil = None
+        self.candidato = None
+        self.vista = None
         return True
 
-    def detectar(self):
+    def detectar(self, mostrar=False):
         """Devuelve el centro normalizado del nuevo foco, o None."""
         gris = leer_gris(self.cap)
+        self.candidato = None
+        if mostrar:
+            self.vista = None
         if gris is None or self.ambiente is None or gris.shape != self.ambiente.shape:
             return None
 
         # El foco debe destacar sobre la referencia y sobre sus alrededores.
+        # Compensamos ajustes de exposición que afectan toda la imagen.
+        cambio_exposicion = max(0, round(cv2.mean(gris)[0] - cv2.mean(self.ambiente)[0]))
         aumento = cv2.subtract(gris, self.ambiente)
         contraste = cv2.subtract(gris, cv2.blur(gris, VENTANA_CONTRASTE))
         mascara = cv2.bitwise_and(
             cv2.inRange(gris, BRILLO_MINIMO, 255),
-            cv2.inRange(aumento, AUMENTO_BRILLO_MINIMO, 255),
+            cv2.inRange(aumento, min(255, AUMENTO_BRILLO_MINIMO + cambio_exposicion), 255),
         )
         mascara = cv2.bitwise_and(mascara, cv2.inRange(contraste, CONTRASTE_FOCO_MINIMO, 255))
         cantidad, _, datos, centros = cv2.connectedComponentsWithStats(mascara)
         alto, ancho = gris.shape
         area_maxima = alto * ancho * FRACCION_MAXIMA
-        focos = [
-            i for i in range(1, cantidad)
-            if AREA_MINIMA <= datos[i, cv2.CC_STAT_AREA] <= area_maxima
-        ]
+        if mostrar:
+            miniatura = cv2.resize(gris, (240, 140), interpolation=cv2.INTER_AREA)
+            self.vista = cv2.cvtColor(miniatura, cv2.COLOR_GRAY2RGB).tobytes()
+
+        focos = []
+        for i in range(1, cantidad):
+            x, y, ancho_foco, alto_foco, area = datos[i]
+            if not AREA_MINIMA <= area <= area_maxima:
+                continue
+            if max(ancho_foco, alto_foco) > 3 * min(ancho_foco, alto_foco):
+                continue
+            punto = (centros[i, 0] / ancho, centros[i, 1] / alto)
+            if self.perfil is None and not all(
+                MARGEN_GUIA_LINTERNA <= valor <= 1 - MARGEN_GUIA_LINTERNA for valor in punto
+            ):
+                continue
+            zona = gris[y:y + alto_foco, x:x + ancho_foco]
+            brillo = int(zona.max())
+            if self.perfil is not None:
+                area_ref, brillo_ref = self.perfil
+                if not area_ref / FACTOR_AREA_FOCO <= area <= area_ref * FACTOR_AREA_FOCO:
+                    continue
+                if brillo < brillo_ref - TOLERANCIA_BRILLO_FOCO:
+                    continue
+            focos.append((punto, area, brillo))
+
         if not focos:
             return None
-
-        posiciones = {
-            i: (centros[i, 0] / ancho, centros[i, 1] / alto) for i in focos
-        }
         if self.anterior is None:
-            foco = max(focos, key=lambda i: datos[i, cv2.CC_STAT_AREA])
+            elegido = max(focos, key=lambda foco: foco[2])
         else:
-            foco = min(focos, key=lambda i: distancia2(posiciones[i], self.anterior))
-        return posiciones[foco]
+            elegido = min(focos, key=lambda foco: distancia2(foco[0], self.anterior))
+        punto, area, brillo = elegido
+        self.candidato = (area, brillo)
+        return punto
 
     def confirmar(self, posicion):
         """Confirma el foco tras varios cuadros seguidos en la misma zona."""
@@ -94,7 +126,10 @@ class LectorLinterna:
             self.consecutivos = 0
         self.anterior = posicion
         self.consecutivos += 1
-        return self.consecutivos >= CUADROS_CONFIRMACION
+        if self.consecutivos < CUADROS_CONFIRMACION:
+            return False
+        self.perfil = self.candidato
+        return True
 
     def seguir(self, posicion):
         """Actualiza la referencia del último punto válido durante el vuelo."""

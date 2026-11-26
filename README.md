@@ -18,7 +18,7 @@ En Windows, activá el entorno con `.venv\Scripts\activate` en CMD. El programa 
 ## Cómo jugar
 
 - En el menú, elegí un mono, un zorro, un conejo, un panda o una rana y seleccioná la dificultad. Cada modo muestra su mejor puntaje guardado. Podés usar el mouse o las flechas (arriba/abajo para cambiar de fila, izquierda/derecha para cambiar la opción).
-- Elegí Jugar. Con la linterna apagada, registrá la luz ambiente. Luego encendé la linterna del celular y sostenela quieta mirando hacia la webcam. Cuando aparezca «Linterna detectada correctamente», elegí Empezar a volar o presioná Enter.
+- Elegí Jugar. Con la linterna apagada, registrá la luz ambiente. Luego encendé la linterna del celular y apuntala hacia la webcam y sostenela en el recuadro amarillo. El recuadro verde de la vista previa muestra qué luz detectó el juego. Cuando aparezca «Linterna detectada correctamente», elegí Empezar a volar o presioná Enter.
 - Subí la linterna para ascender y bajala para descender. La posición horizontal del piloto es fija. Los murciélagos suben y bajan entre las paredes y aparecen más seguido en las dificultades altas.
 - Agarrá las frutas rojas para activar cinco segundos de turbo. Durante ese tiempo volás más rápido y cada desfiladero cruzado vale dos puntos. La barra inferior muestra cuánto turbo queda. Otra fruta recarga la barra.
 - Si se pierde el foco, el juego se pausa. Volvé a mostrar la linterna para seguir.
