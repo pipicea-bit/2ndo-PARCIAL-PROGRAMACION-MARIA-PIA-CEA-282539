@@ -145,19 +145,24 @@ def cargar_sonidos():
     )
 
 
-def dibujar_calibracion(pantalla, titulo, normal, estado, boton, error, vista, posicion):
+def dibujar_calibracion(pantalla, titulo, normal, estado, boton, error):
     """Guía la toma de luz ambiente, la detección y el inicio del vuelo."""
     if estado == "ambiente":
         escribir(pantalla, titulo, "Apagá la linterna", 128, a.BOLSO)
         escribir(pantalla, normal, "Dejá la cámara apuntando al lugar de juego y registrá la luz ambiente.", 226)
         etiqueta = "Registrar luz ambiente"
-    elif estado == "buscar":
-        escribir(pantalla, normal, "Luz ambiente registrada", 64, a.COLOR_HOJA)
-        escribir(pantalla, titulo, "Encendé la linterna", 123, a.BOLSO)
-        escribir(pantalla, normal, "Apuntá la luz a la webcam y mantenela quieta en el recuadro.", 183)
-        dibujar_vista(pantalla, vista, posicion, 216)
-        escribir(pantalla, normal, "Buscando la linterna…", 405)
-        etiqueta = None
+    elif estado in ("encender", "buscar", "tapar", "destapar"):
+        instrucciones = {
+            "encender": ("Encendé la linterna", "Apuntala al centro de la webcam y mantené el celular quieto."),
+            "buscar": ("Buscando la linterna", "Mantené el celular quieto un momento."),
+            "tapar": ("Tapá la linterna", "Tapá la luz con la mano sin mover el celular."),
+            "destapar": ("Destapá la linterna", "Dejá que la luz vuelva a verse en el mismo lugar."),
+        }
+        encabezado, indicacion = instrucciones[estado]
+        escribir(pantalla, normal, "Luz ambiente registrada", 110, a.COLOR_HOJA)
+        escribir(pantalla, titulo, encabezado, 190, a.BOLSO)
+        escribir(pantalla, normal, indicacion, 263)
+        etiqueta = "Linterna encendida" if estado == "encender" else None
     else:
         escribir(pantalla, titulo, "Prepará tu linterna", 128, a.BOLSO)
         x, y = a.ANCHO // 2, 184
@@ -169,31 +174,14 @@ def dibujar_calibracion(pantalla, titulo, normal, estado, boton, error, vista, p
         escribir(pantalla, normal, "Linterna detectada correctamente", 226, a.COLOR_HOJA)
         escribir(pantalla, normal, "Mové el celular hacia arriba y abajo para controlar a tu animal.", 263)
         etiqueta = "Empezar a volar"
-        dibujar_vista(pantalla, vista, posicion, 369)
 
     if etiqueta is not None:
         dibujar_tarjeta(pantalla, boton, True)
         escribir(pantalla, normal, etiqueta, boton.centery)
     if error:
         escribir(pantalla, normal, "No se pudo leer la cámara. Revisá los permisos y volvé a intentar.", 415, a.BOLSO)
-    ayuda = "Esc para volver" if etiqueta is None else "Enter o clic para confirmar · Esc para volver"
-    escribir(pantalla, normal, ayuda, 516 if estado == "listo" else 481)
-
-
-def dibujar_vista(pantalla, vista, posicion, y):
-    """Muestra la vista espejada y marca el foco con un recuadro."""
-    if vista is None:
-        return
-    ancho, alto = 240, 140
-    marco = pygame.Rect((a.ANCHO - ancho) // 2, y, ancho, alto)
-    pantalla.blit(pygame.image.frombuffer(vista, (ancho, alto), "RGB"), marco)
-    if posicion is None:
-        guia = marco.inflate(-2 * ancho * a.MARGEN_GUIA_LINTERNA, -2 * alto * a.MARGEN_GUIA_LINTERNA)
-        pygame.draw.rect(pantalla, a.BOLSO, guia, 2)
-    else:
-        foco = pygame.Rect(0, 0, 25, 25)
-        foco.center = (marco.x + round(posicion[0] * ancho), marco.y + round(posicion[1] * alto))
-        pygame.draw.rect(pantalla, a.COLOR_HOJA, foco.clip(marco), 2)
+    ayuda = "R para recalibrar · Esc para volver" if etiqueta is None else "Enter o clic para confirmar · Esc para volver"
+    escribir(pantalla, normal, ayuda, 481)
 
 
 def jugar(pantalla, reloj, cap, sonido_paso, sonido_fin):
@@ -206,7 +194,8 @@ def jugar(pantalla, reloj, cap, sonido_paso, sonido_fin):
     estado = "menu"
     menu = Menu()
     lector = LectorLinterna(cap)
-    pantallas_calibracion = ("ambiente", "buscar", "listo")
+    pantallas_calibracion = ("ambiente", "encender", "buscar", "tapar", "destapar", "listo")
+    cuadros_verificacion = 0
     confirmar = pygame.Rect(285, 321, 290, 48)
     error_camara = False
     records = cargar()
@@ -225,12 +214,16 @@ def jugar(pantalla, reloj, cap, sonido_paso, sonido_fin):
                 if evento.key == pygame.K_ESCAPE:
                     estado = "menu"
                     empezar = False
+                elif evento.key == pygame.K_r and estado in pantallas_calibracion:
+                    estado = "ambiente"
+                    error_camara = False
+                    empezar = False
                 elif estado == "menu":
                     if evento.key in (pygame.K_SPACE, pygame.K_RETURN):
                         empezar = True
                     else:
                         menu.tecla(evento.key)
-                elif estado in ("ambiente", "listo"):
+                elif estado in ("ambiente", "encender", "listo"):
                     empezar = evento.key in (pygame.K_SPACE, pygame.K_RETURN) or empezar
                 elif estado in ("victoria", "derrota"):
                     if evento.key in (pygame.K_SPACE, pygame.K_RETURN, pygame.K_r):
@@ -241,7 +234,7 @@ def jugar(pantalla, reloj, cap, sonido_paso, sonido_fin):
             if evento.type == pygame.MOUSEBUTTONDOWN and evento.button == 1:
                 if estado == "menu":
                     empezar = menu.pulsar(evento.pos) or empezar
-                elif estado in ("ambiente", "listo"):
+                elif estado in ("ambiente", "encender", "listo"):
                     empezar = confirmar.collidepoint(evento.pos) or empezar
                 elif estado in ("victoria", "derrota"):
                     if repetir.collidepoint(evento.pos):
@@ -251,17 +244,30 @@ def jugar(pantalla, reloj, cap, sonido_paso, sonido_fin):
                         empezar = False
 
         posicion = None
-        if estado in ("buscar", "listo", "jugando"):
-            posicion = lector.detectar(mostrar=estado != "jugando")
+        if estado in ("buscar", "tapar", "destapar", "listo", "jugando"):
+            posicion = lector.detectar(en_misma_zona=estado in ("tapar", "destapar"))
         if empezar and estado in ("menu", "victoria", "derrota"):
             estado = "ambiente"
             error_camara = False
         elif empezar and estado == "ambiente":
             error_camara = not lector.registrar_ambiente()
             if not error_camara:
-                estado = "buscar"
+                estado = "encender"
+        elif empezar and estado == "encender":
+            estado = "buscar"
         elif estado == "buscar" and lector.confirmar(posicion):
-            estado = "listo"
+            estado = "tapar"
+            cuadros_verificacion = 0
+        elif estado in ("tapar", "destapar"):
+            # Una lámpara fija no supera la prueba de desaparecer y volver.
+            cumple_paso = posicion is None if estado == "tapar" else posicion is not None
+            if lector.cuadro_valido and cumple_paso:
+                cuadros_verificacion += 1
+            else:
+                cuadros_verificacion = 0
+            if cuadros_verificacion >= a.CUADROS_CONFIRMACION:
+                estado = "destapar" if estado == "tapar" else "listo"
+                cuadros_verificacion = 0
         elif estado == "listo":
             lector.seguir(posicion)
 
@@ -352,7 +358,7 @@ def jugar(pantalla, reloj, cap, sonido_paso, sonido_fin):
         elif estado == "menu":
             menu.dibujar(pantalla, titulo, normal, chico, records)
         elif estado in pantallas_calibracion:
-            dibujar_calibracion(pantalla, titulo, normal, estado, confirmar, error_camara, lector.vista, posicion)
+            dibujar_calibracion(pantalla, titulo, normal, estado, confirmar, error_camara)
         else:
             encabezado = "¡Llegaste al otro lado!" if estado == "victoria" else "¡Chocaste!"
             escribir(pantalla, titulo, encabezado, 172, a.BOLSO)

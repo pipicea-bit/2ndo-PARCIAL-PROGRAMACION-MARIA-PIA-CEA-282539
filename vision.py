@@ -37,7 +37,7 @@ class LectorLinterna:
         self.perdidos = 0
         self.perfil = None
         self.candidato = None
-        self.vista = None
+        self.cuadro_valido = False
 
     def registrar_ambiente(self):
         """Guarda la referencia que debe tomarse con la linterna apagada."""
@@ -51,16 +51,17 @@ class LectorLinterna:
         self.perdidos = 0
         self.perfil = None
         self.candidato = None
-        self.vista = None
+        self.cuadro_valido = False
         return True
 
-    def detectar(self, mostrar=False):
+    def detectar(self, en_misma_zona=False):
         """Devuelve el centro normalizado del nuevo foco, o None."""
         gris = leer_gris(self.cap)
         self.candidato = None
-        if mostrar:
-            self.vista = None
-        if gris is None or self.ambiente is None or gris.shape != self.ambiente.shape:
+        self.cuadro_valido = (
+            gris is not None and self.ambiente is not None and gris.shape == self.ambiente.shape
+        )
+        if not self.cuadro_valido:
             return None
 
         # El foco debe destacar sobre la referencia y sobre sus alrededores.
@@ -76,10 +77,6 @@ class LectorLinterna:
         cantidad, _, datos, centros = cv2.connectedComponentsWithStats(mascara)
         alto, ancho = gris.shape
         area_maxima = alto * ancho * FRACCION_MAXIMA
-        if mostrar:
-            miniatura = cv2.resize(gris, (240, 140), interpolation=cv2.INTER_AREA)
-            self.vista = cv2.cvtColor(miniatura, cv2.COLOR_GRAY2RGB).tobytes()
-
         focos = []
         for i in range(1, cantidad):
             x, y, ancho_foco, alto_foco, area = datos[i]
@@ -88,6 +85,9 @@ class LectorLinterna:
             if max(ancho_foco, alto_foco) > 3 * min(ancho_foco, alto_foco):
                 continue
             punto = (centros[i, 0] / ancho, centros[i, 1] / alto)
+            if en_misma_zona and self.anterior is not None:
+                if distancia2(punto, self.anterior) > DESPLAZAMIENTO_CONFIRMACION ** 2:
+                    continue
             if self.perfil is None and not all(
                 MARGEN_GUIA_LINTERNA <= valor <= 1 - MARGEN_GUIA_LINTERNA for valor in punto
             ):
