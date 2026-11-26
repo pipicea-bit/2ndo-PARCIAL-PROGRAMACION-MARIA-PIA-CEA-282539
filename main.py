@@ -157,6 +157,12 @@ def dibujar_calibracion(pantalla, titulo, normal, estado, boton, error):
         escribir(pantalla, normal, "Buscando la linterna…", 345, a.BOLSO)
         etiqueta = None
     else:
+        x, y = a.ANCHO // 2, 184
+        pygame.draw.circle(pantalla, a.COLOR_HOJA, (x, y), 22, 3)
+        pygame.draw.lines(
+            pantalla, a.COLOR_HOJA, False,
+            [(x - 9, y), (x - 2, y + 7), (x + 11, y - 7)], 4,
+        )
         escribir(pantalla, normal, "Linterna detectada correctamente", 226, a.COLOR_HOJA)
         escribir(pantalla, normal, "Mové el celular hacia arriba y abajo para controlar a tu animal.", 263)
         etiqueta = "Empezar a volar"
@@ -232,15 +238,18 @@ def jugar(pantalla, reloj, cap, sonido_paso, sonido_fin):
             error_camara = not lector.registrar_ambiente()
             if not error_camara:
                 estado = "buscar"
-        elif estado in ("buscar", "listo") and not lector.confirmar(posicion):
-            estado = "buscar"
-        elif estado == "buscar":
+        elif estado == "buscar" and lector.confirmar(posicion):
             estado = "listo"
-        elif empezar and estado == "listo":
+        elif estado == "listo":
+            lector.seguir(posicion)
+
+        # Una vez confirmada, la calibración se conserva hasta empezar o salir.
+        if empezar and estado == "listo":
+            posicion_inicial = posicion if posicion is not None else lector.anterior
             puntos = 0
             cruces = 0
             restante_turbo = 0.0
-            y = altura_objetivo(posicion)
+            y = altura_objetivo(posicion_inicial)
             meta = a.METAS[menu.nivel]
             inicial, aumento, *_ = a.DIFICULTADES[menu.nivel]
             numero = 1
