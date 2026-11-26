@@ -147,16 +147,18 @@ def cargar_sonidos():
 
 def dibujar_calibracion(pantalla, titulo, normal, estado, boton, error):
     """Guía la toma de luz ambiente, la detección y el inicio del vuelo."""
-    escribir(pantalla, titulo, "Prepará tu linterna", 128, a.BOLSO)
     if estado == "ambiente":
-        escribir(pantalla, normal, "1. Apagá la linterna y dejá la cámara apuntando al lugar de juego.", 226)
+        escribir(pantalla, titulo, "Apagá la linterna", 128, a.BOLSO)
+        escribir(pantalla, normal, "Dejá la cámara apuntando al lugar de juego y registrá la luz ambiente.", 226)
         etiqueta = "Registrar luz ambiente"
     elif estado == "buscar":
-        escribir(pantalla, normal, "2. Encendé tu linterna y mostrala a la cámara.", 226)
-        escribir(pantalla, normal, "Mantenela quieta un momento frente a la webcam.", 263)
-        escribir(pantalla, normal, "Buscando la linterna…", 345, a.BOLSO)
+        escribir(pantalla, normal, "Luz ambiente registrada", 128, a.COLOR_HOJA)
+        escribir(pantalla, titulo, "Encendé la linterna", 204, a.BOLSO)
+        escribir(pantalla, normal, "Mostrala a la webcam y mantenela quieta un momento.", 270)
+        escribir(pantalla, normal, "Buscando la linterna…", 345)
         etiqueta = None
     else:
+        escribir(pantalla, titulo, "Prepará tu linterna", 128, a.BOLSO)
         x, y = a.ANCHO // 2, 184
         pygame.draw.circle(pantalla, a.COLOR_HOJA, (x, y), 22, 3)
         pygame.draw.lines(
@@ -172,7 +174,8 @@ def dibujar_calibracion(pantalla, titulo, normal, estado, boton, error):
         escribir(pantalla, normal, etiqueta, boton.centery)
     if error:
         escribir(pantalla, normal, "No se pudo leer la cámara. Revisá los permisos y volvé a intentar.", 415, a.BOLSO)
-    escribir(pantalla, normal, "Enter o clic para confirmar · Esc para volver", 481)
+    ayuda = "Esc para volver" if etiqueta is None else "Enter o clic para confirmar · Esc para volver"
+    escribir(pantalla, normal, ayuda, 481)
 
 
 def jugar(pantalla, reloj, cap, sonido_paso, sonido_fin):
