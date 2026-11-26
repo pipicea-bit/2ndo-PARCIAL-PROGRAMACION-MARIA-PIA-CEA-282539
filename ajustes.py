@@ -3,7 +3,7 @@
 ANCHO, ALTO = 860, 540
 HUD = 58
 FPS = 60
-TITULO = "Macaquito · Vuelo nocturno"
+TITULO = "HIGHLIGHT"
 FONDO = (14, 23, 45)
 TEXTO = (255, 245, 216)
 ESTRELLA = (75, 90, 124)

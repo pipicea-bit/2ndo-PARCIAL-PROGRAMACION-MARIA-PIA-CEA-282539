@@ -1,4 +1,4 @@
-# Macaquito · Vuelo nocturno
+# HIGHLIGHT
 
 Guiá a tu piloto con la linterna del celular. Cruzá 12 desfiladeros en Fácil, 15 en Normal, 20 en Difícil o 25 en Extremo. En Survival, sumá todos los puntos que puedas hasta chocar con una pared o un murciélago. A medida que sumás puntos, las paredes avanzan más rápido y los próximos huecos se achican.
 
@@ -41,10 +41,14 @@ Los WAV de `sonidos/` se sintetizaron para el proyecto a partir de ondas senoida
 
 ## Uso de IA
 
-Se usó OpenAI Codex para interpretar, implementar y verificar el código, sintetizar sonidos y preparar el README
+Se usó OpenAI Codex para interpretar la consigna, implementar y verificar el código, sintetizar sonidos y preparar el README, el informe y el póster.
 
+Prompts relevantes:
 
-OpenAI Codex. (2026). *Prompts utilizados para desarrollar Macaquito y sus materiales de entrega* [Generación de código y texto]. Recuperado de https://openai.com/codex/
+- «necesito hacer este parcial» (con la consigna en PDF adjunta).
+- «yo quiero hacer algo asi, pero mas dificil. quiero hacer un flappy bird. con la linterna del celu se ,maneja el macaquito y va volando pasando obstaculos. se entiende ?»
+
+OpenAI Codex. (2026). *Prompts utilizados para desarrollar HIGHLIGHT y sus materiales de entrega* [Generación de código y texto]. Recuperado de https://openai.com/codex/
 
 ## Repositorio
 

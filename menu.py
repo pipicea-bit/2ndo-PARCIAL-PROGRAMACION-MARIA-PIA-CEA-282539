@@ -60,7 +60,7 @@ class Menu:
 
     def dibujar(self, pantalla, titulo, normal, chico, records):
         """Muestra opciones, récords y el objetivo del nivel elegido."""
-        escribir(pantalla, titulo, "Macaquito", 63, a.BOLSO)
+        escribir(pantalla, titulo, a.TITULO, 63, a.BOLSO)
         escribir(pantalla, normal, "Vuelo nocturno", 106)
         escribir(pantalla, normal, "Elegí tu animal", 137, a.BOLSO if self.fila_activa == "personajes" else a.TEXTO)
         for nombre, tarjeta in self.personajes.items():
