@@ -16,12 +16,35 @@ from vision import LectorLinterna, abrir_camara
 class Obstaculo:
     """Dos paredes con un hueco que el macaquito debe atravesar."""
 
-    def __init__(self, x, puntos, nivel, numero):
-        """Elige la posición vertical del hueco y lo ajusta al puntaje."""
+    def __init__(self, x, nivel, numero, anterior=None):
+        """Reduce el hueco y lo mantiene al alcance desde el anterior."""
         self.x = x
-        _, _, inicial, minimo, reduccion = a.DIFICULTADES[nivel]
-        hueco = max(minimo, inicial - puntos * reduccion)
-        self.paso = randint(a.HUD + a.MARGEN_HUECO, a.ALTO - a.MARGEN_HUECO - hueco)
+        velocidad, aumento, inicial, minimo = a.DIFICULTADES[nivel]
+        meta = a.METAS[nivel]
+        minimo = max(minimo, 2 * a.RADIO + a.HOLGURA_HUECO)
+        if meta is None:
+            hueco = max(minimo, inicial - (numero - 1) * a.REDUCCION_SURVIVAL)
+            velocidad_maxima = a.VELOCIDAD_MAXIMA_SURVIVAL
+        else:
+            hueco = round(inicial - (inicial - minimo) * (numero - 1) / (meta - 1))
+            hueco = max(minimo, hueco)
+            velocidad_maxima = velocidad + (meta - 1) * aumento
+
+        mitad = hueco // 2
+        desde = a.HUD + a.MARGEN_HUECO + mitad
+        hasta = a.ALTO - a.MARGEN_HUECO - (hueco - mitad)
+        if anterior is not None:
+            # Usamos el tramo entre paredes y reservamos parte del tiempo para reaccionar.
+            tramo = a.ESPACIO_ENTRE_OBSTACULOS - a.ANCHO_OBSTACULO - 2 * a.RADIO
+            alcance = int(
+                tramo * a.VELOCIDAD_VERTICAL * a.FRACCION_TRASLADO
+                / (velocidad_maxima * a.FACTOR_TURBO)
+            )
+            desde = max(desde, anterior.centro - alcance)
+            hasta = min(hasta, anterior.centro + alcance)
+
+        self.centro = randint(desde, hasta)
+        self.paso = self.centro - mitad
         self.fin_paso = self.paso + hueco
         self.contado = False
         primero = a.PRIMER_MURCIELAGO[nivel]
@@ -221,7 +244,7 @@ def jugar(pantalla, reloj, cap, sonido_paso, sonido_fin):
             meta = a.METAS[menu.nivel]
             inicial, aumento, *_ = a.DIFICULTADES[menu.nivel]
             numero = 1
-            obstaculos = [Obstaculo(a.ANCHO, puntos, menu.nivel, numero)]
+            obstaculos = [Obstaculo(a.ANCHO, menu.nivel, numero)]
             estado = "jugando"
 
         # Al perder el foco se congela el vuelo y el avance de las paredes.
@@ -262,7 +285,9 @@ def jugar(pantalla, reloj, cap, sonido_paso, sonido_fin):
 
             if obstaculos[-1].x <= a.ANCHO - a.ESPACIO_ENTRE_OBSTACULOS:
                 numero += 1
-                obstaculos.append(Obstaculo(a.ANCHO, cruces, menu.nivel, numero))
+                anterior = obstaculos[-1]
+                x_nuevo = anterior.x + a.ESPACIO_ENTRE_OBSTACULOS
+                obstaculos.append(Obstaculo(x_nuevo, menu.nivel, numero, anterior))
             # Los objetos flotantes siguen activos después de que sale la pared.
             obstaculos = [
                 o for o in obstaculos

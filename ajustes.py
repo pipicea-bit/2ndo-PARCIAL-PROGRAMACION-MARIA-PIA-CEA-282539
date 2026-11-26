@@ -16,13 +16,16 @@ VELOCIDAD_VERTICAL = 300
 ANCHO_OBSTACULO = 70
 ESPACIO_ENTRE_OBSTACULOS = 310
 MARGEN_HUECO = 34
-# Cada nivel define velocidad inicial, aumento, hueco inicial, mínimo y reducción.
+HOLGURA_HUECO = 48
+FRACCION_TRASLADO = 0.70
+REDUCCION_SURVIVAL = 4
+# Cada nivel define velocidad inicial, aumento, hueco inicial y mínimo.
 DIFICULTADES = {
-    "Fácil": (150, 7, 250, 200, 4),
-    "Normal": (195, 13, 210, 148, 6),
-    "Difícil": (235, 15, 178, 125, 6),
-    "Extremo": (250, 12, 155, 112, 5),
-    "Survival": (190, 10, 210, 140, 5),
+    "Fácil": (150, 7, 250, 200),
+    "Normal": (195, 13, 210, 148),
+    "Difícil": (235, 15, 178, 125),
+    "Extremo": (250, 12, 155, 112),
+    "Survival": (190, 10, 210, 140),
 }
 METAS = {"Fácil": 12, "Normal": 15, "Difícil": 20, "Extremo": 25, "Survival": None}
 VELOCIDAD_MAXIMA_SURVIVAL = 410

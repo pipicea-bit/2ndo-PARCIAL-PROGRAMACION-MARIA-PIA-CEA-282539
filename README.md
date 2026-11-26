@@ -1,6 +1,6 @@
 # HIGHLIGHT
 
-Guiá a tu piloto con la linterna del celular. Cruzá 12 desfiladeros en Fácil, 15 en Normal, 20 en Difícil o 25 en Extremo. En Survival, sumá todos los puntos que puedas hasta chocar con una pared o un murciélago. A medida que sumás puntos, las paredes avanzan más rápido y los próximos huecos se achican.
+Guiá a tu piloto con la linterna del celular. Cruzá 12 desfiladeros en Fácil, 15 en Normal, 20 en Difícil o 25 en Extremo. En Survival, sumá todos los puntos que puedas hasta chocar con una pared o un murciélago. Cada barrera tiene un hueco más angosto que la anterior. En Survival los huecos se achican hasta un mínimo, y la altura del próximo hueco siempre queda al alcance desde el anterior.
 
 ## Instalación
 
