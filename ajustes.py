@@ -40,6 +40,7 @@ PRIMER_MURCIELAGO = {"Fácil": 4, "Normal": 2, "Difícil": 1, "Extremo": 1, "Sur
 INTERVALO_MURCIELAGO = {"Fácil": 4, "Normal": 3, "Difícil": 2, "Extremo": 2, "Survival": 2}
 COLOR_FRUTA = (255, 120, 106)
 COLOR_HOJA = (162, 235, 123)
+COLOR_DERROTA = (255, 101, 112)
 RADIO_FRUTA = 13
 DISTANCIA_FRUTA = 135
 AMPLITUD_FRUTA = 24

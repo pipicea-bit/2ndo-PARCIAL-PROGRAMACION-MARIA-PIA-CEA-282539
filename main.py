@@ -1,13 +1,13 @@
 """Juego de vuelo controlado con la linterna del celular."""
 
 from math import sin
-from pathlib import Path
 from random import randint
 
 import pygame
 
 import ajustes as a
 from animales import dibujar_macaquito
+from audio import Audio
 from menu import Menu, dibujar_tarjeta, escribir
 from puntajes import cargar, guardar
 from vision import LectorLinterna, abrir_camara
@@ -136,15 +136,6 @@ def dibujar_turbo(pantalla, fuente, restante):
     escribir(pantalla, fuente, "Turbo · Puntos x2", a.ALTO - 29, a.COLOR_HOJA)
 
 
-def cargar_sonidos():
-    """Carga los dos efectos antes de iniciar el bucle."""
-    carpeta = Path(__file__).resolve().parent / "sonidos"
-    return tuple(
-        pygame.mixer.Sound(str(carpeta / nombre))
-        for nombre in ("paso.wav", "fin.wav")
-    )
-
-
 def dibujar_calibracion(pantalla, titulo, normal, estado, boton, error):
     """Guía la toma de luz ambiente, la detección y el inicio del vuelo."""
     if estado == "ambiente":
@@ -184,7 +175,7 @@ def dibujar_calibracion(pantalla, titulo, normal, estado, boton, error):
     escribir(pantalla, normal, ayuda, 481)
 
 
-def jugar(pantalla, reloj, cap, sonido_paso, sonido_fin):
+def jugar(pantalla, reloj, cap, audio):
     """Ejecuta la partida y permite reiniciar desde la pantalla final."""
     familias = ("trebuchetms", "verdana", "arial", "dejavusans")
     titulo = pygame.font.SysFont(familias, 56, bold=True)
@@ -306,7 +297,7 @@ def jugar(pantalla, reloj, cap, sonido_paso, sonido_fin):
                 if obstaculo.con_fruta and cerca(y, obstaculo.fruta(), a.RADIO_FRUTA):
                     obstaculo.con_fruta = False
                     restante_turbo = a.DURACION_TURBO
-                    sonido_paso.play()
+                    audio.paso()
                 # El poder duplica el puntaje de cada cruce, sin duplicar los desfiladeros cruzados.
                 if not obstaculo.contado and obstaculo.x + a.ANCHO_OBSTACULO < a.X_MACAQUITO - a.RADIO:
                     obstaculo.contado = True
@@ -315,7 +306,7 @@ def jugar(pantalla, reloj, cap, sonido_paso, sonido_fin):
                     if puntos > records[menu.nivel]:
                         records[menu.nivel] = puntos
                         guardado = guardar(records)
-                    sonido_paso.play()
+                    audio.paso()
                     if cruces == meta:
                         estado = "victoria"
                         break
@@ -332,9 +323,7 @@ def jugar(pantalla, reloj, cap, sonido_paso, sonido_fin):
                 or (o.con_murcielago and o.murcielago()[0] + a.RADIO_MURCIELAGO > 0)
                 or (o.con_fruta and o.fruta()[0] + a.RADIO_FRUTA > 0)
             ]
-            if estado != "jugando":
-                sonido_fin.play()
-
+        audio.actualizar(estado, menu.nivel)
         pantalla.fill(a.FONDO)
         for estrella in estrellas:
             pygame.draw.circle(pantalla, a.ESTRELLA, estrella, 2)
@@ -360,8 +349,10 @@ def jugar(pantalla, reloj, cap, sonido_paso, sonido_fin):
         elif estado in pantallas_calibracion:
             dibujar_calibracion(pantalla, titulo, normal, estado, confirmar, error_camara)
         else:
-            encabezado = "¡Llegaste al otro lado!" if estado == "victoria" else "¡Chocaste!"
-            escribir(pantalla, titulo, encabezado, 172, a.BOLSO)
+            ganaste = estado == "victoria"
+            encabezado = "¡Yeyyyy, ganaste!" if ganaste else "Upss, perdiste"
+            color = a.COLOR_HOJA if ganaste else a.COLOR_DERROTA
+            escribir(pantalla, titulo, encabezado, 172, color)
             escribir(pantalla, normal, f"{menu.nivel} · Puntaje {puntos} · Récord {records[menu.nivel]}", 245)
             dibujar_tarjeta(pantalla, repetir, True)
             dibujar_tarjeta(pantalla, principal, False)
@@ -382,9 +373,9 @@ def main():
         pygame.mixer.init()
         pantalla = pygame.display.set_mode((a.ANCHO, a.ALTO))
         pygame.display.set_caption(a.TITULO)
-        sonidos = cargar_sonidos()
+        audio = Audio()
         cap = abrir_camara()
-        jugar(pantalla, pygame.time.Clock(), cap, *sonidos)
+        jugar(pantalla, pygame.time.Clock(), cap, audio)
     finally:
         if cap is not None:
             cap.release()

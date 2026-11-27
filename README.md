@@ -33,15 +33,16 @@ La calibración toma de referencia la luz que ya está en el cuadro. Mantené la
 | `main.py` | Pantallas, bucle, vuelo, choques y puntaje. Incluye la clase `Obstaculo`. |
 | `vision.py` | Abre la webcam, registra la luz ambiente y devuelve el centro normalizado del foco como `(x, y)` o `None`. |
 | `menu.py` | Selección de personaje, dificultad y vista de récords. |
+| `audio.py` | Música del menú y de cada modo, efectos de cruce y sonidos de resultado. |
 | `animales.py` | Dibujos de los cinco pilotos. |
 | `puntajes.py` | Lectura y escritura de los récords locales. |
 | `ajustes.py` | Colores, dimensiones, velocidades, dificultad y umbrales de detección. |
 
-Los WAV de `sonidos/` se sintetizaron para el proyecto a partir de ondas senoidales. Las figuras del juego se dibujan con Pygame y el póster se dibujó con Pillow. Los recursos visuales y sonoros son originales del proyecto.
+La música original del menú y de los cinco modos, y los efectos de paso, victoria y derrota, se sintetizaron para el proyecto y están en `sonidos/`. Las figuras del juego se dibujan con Pygame. El póster final es el flyer de HIGHLIGHT aportado por María Pía Cea.
 
 ## Uso de IA
 
-Se usó OpenAI Codex para interpretar la consigna, implementar y verificar el código, sintetizar sonidos y preparar el README, el informe y el póster.
+Se usó OpenAI Codex para interpretar la consigna, implementar y verificar el código, sintetizar sonidos y preparar el README y el borrador del informe.
 
 Prompts relevantes:
 
