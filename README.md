@@ -1,5 +1,9 @@
 # HIGHLIGHT
 
+Repositorio de GitHub
+
+<https://github.com/pipicea-bit/2ndo-PARCIAL-PROGRAMACION-MARIA-PIA-CEA-282539>
+
 Guiá a tu piloto con la linterna del celular. Cruzá 12 desfiladeros en Fácil, 15 en Normal, 20 en Difícil o 25 en Extremo. En Survival, sumá todos los puntos que puedas hasta chocar con una pared o un murciélago. Cada barrera tiene un hueco más angosto que la anterior. En Survival los huecos se achican hasta un mínimo, y la altura del próximo hueco siempre queda al alcance desde el anterior.
 
 ## Instalación
@@ -42,15 +46,11 @@ La música original del menú y de los cinco modos, y los efectos de paso, victo
 
 ## Uso de IA
 
-Se usó OpenAI Codex para interpretar la consigna, implementar y verificar el código, sintetizar sonidos y preparar el README 
-
+Se usó OpenAI Codex para interpretar la consigna, implementar y verificar el código, sintetizar sonidos y preparar el README y el borrador del informe.
 
 Prompts relevantes:
 
-- «yo quiero hacer algo asi, pero mas dificil. quiero hacer un juego inspirado en flappy bird. 
+- «necesito hacer este parcial» (con la consigna en PDF adjunta).
+- «yo quiero hacer algo asi, pero mas dificil. quiero hacer un flappy bird. con la linterna del celu se ,maneja el macaquito y va volando pasando obstaculos. se entiende ?»
 
 OpenAI Codex. (2026). *Prompts utilizados para desarrollar HIGHLIGHT y sus materiales de entrega* [Generación de código y texto]. Recuperado de https://openai.com/codex/
-
-## Repositorio
-
-Enlace de GitHub pendiente de agregar cuando se publique el repositorio local.
