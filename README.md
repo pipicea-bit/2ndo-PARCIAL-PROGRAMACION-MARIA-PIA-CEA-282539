@@ -42,12 +42,12 @@ La música original del menú y de los cinco modos, y los efectos de paso, victo
 
 ## Uso de IA
 
-Se usó OpenAI Codex para interpretar la consigna, implementar y verificar el código, sintetizar sonidos y preparar el README y el borrador del informe.
+Se usó OpenAI Codex para interpretar la consigna, implementar y verificar el código, sintetizar sonidos y preparar el README 
+
 
 Prompts relevantes:
 
-- «necesito hacer este parcial» (con la consigna en PDF adjunta).
-- «yo quiero hacer algo asi, pero mas dificil. quiero hacer un flappy bird. con la linterna del celu se ,maneja el macaquito y va volando pasando obstaculos. se entiende ?»
+- «yo quiero hacer algo asi, pero mas dificil. quiero hacer un juego inspirado en flappy bird. 
 
 OpenAI Codex. (2026). *Prompts utilizados para desarrollar HIGHLIGHT y sus materiales de entrega* [Generación de código y texto]. Recuperado de https://openai.com/codex/
 
